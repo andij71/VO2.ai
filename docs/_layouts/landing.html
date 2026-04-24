@@ -560,7 +560,7 @@
 
   <!-- ─── NAV ─── -->
   <header id="site-header">
-    <a href="/" class="wordmark">VO2<span class="dot">.</span>ai</a>
+    <a href="{{ '/' | relative_url }}" class="wordmark">VO2<span class="dot">.</span>ai</a>
     <nav>
       <a href="#how">How it works</a>
       <a href="#privacy-section">Privacy</a>
@@ -588,7 +588,7 @@
       <div class="hero-actions">
         <a href="https://github.com/andij71/VO2.ai" target="_blank" rel="noopener" class="btn btn-dark">View source on
           GitHub</a>
-        <a href="/privacy/" class="btn btn-ghost">Privacy policy</a>
+        <a href="{{ '/privacy/' | relative_url }}" class="btn btn-ghost">Privacy policy</a>
       </div>
 
       <p class="hero-fine">Not a medical device. Not a substitute for professional coaching.</p>
@@ -652,8 +652,8 @@
         </p>
 
         <div class="privacy-links reveal reveal-delay-2">
-          <a href="/privacy/">Privacy policy (English)</a>
-          <a href="/privacy-de/">Datenschutzerklärung (Deutsch)</a>
+          <a href="{{ '/privacy/' | relative_url }}">Privacy policy (English)</a>
+          <a href="{{ '/privacy-de/' | relative_url }}">Datenschutzerklärung (Deutsch)</a>
         </div>
 
       </div>
@@ -687,13 +687,13 @@
     <div class="footer-top">
       <div>
         <div class="footer-brand">VO2<span class="dot">.</span>ai</div>
-        <p class="footer-byline">Built by Andreas Junemann &middot; </p>
+        <p class="footer-byline">Built by Andreas Junemann &middot; Berlin</p>
       </div>
       <div class="footer-links">
-        <a href="/privacy/">Privacy</a>
-        <a href="/privacy-de/">Datenschutz</a>
+        <a href="{{ '/privacy/' | relative_url }}">Privacy</a>
+        <a href="{{ '/privacy-de/' | relative_url }}">Datenschutz</a>
         <a href="https://github.com/andij71/VO2.ai" target="_blank" rel="noopener">GitHub</a>
-        <a href="/cdn-cgi/l/email-protection#17646267677865635761782539767e">Support</a>
+        <a href="https://github.com/andij71/VO2.ai/issues" target="_blank" rel="noopener">Support</a>
       </div>
     </div>
     <p class="footer-legal">
@@ -702,7 +702,6 @@
     </p>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script>
   <script>
     // ── Nav scroll state ──
     const header = document.getElementById('site-header');
