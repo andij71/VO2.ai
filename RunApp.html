@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RunApp — AI Running Coach</title>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #080809;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::-webkit-scrollbar { display: none; }
+
+  @keyframes shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+  @keyframes pulse-glow {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(28px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes typing-dot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-5px); opacity: 1; }
+  }
+  @keyframes draw-line {
+    from { stroke-dashoffset: 500; }
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes orbit {
+    from { transform: rotate(0deg) translateX(28px) rotate(0deg); }
+    to { transform: rotate(360deg) translateX(28px) rotate(-360deg); }
+  }
+
+  .fade-in-up { animation: fadeInUp 0.45s cubic-bezier(0.2, 0, 0, 1) both; }
+  .slide-in-right { animation: slideInRight 0.38s cubic-bezier(0.2, 0, 0, 1) both; }
+  .draw-line { stroke-dasharray: 500; animation: draw-line 1.8s ease-out both; }
+</style>
+</head>
+<body>
+<script type="text/babel">
+
+// ─── DESIGN TOKENS ───────<script type="text/babel">
+
+// iOS.jsx — Simplified iOS 26 (Liquid Glass) device frame
+// Based on the iOS 26 UI Kit + Figma status bar spec. No assets, no deps.
+// Exports: IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard
+
+// ─────────────────────────────────────────────────────────────
+// Status bar
+// ─────────────────────────────────────────────────────────────
+function IOSStatusBar({ dark = false, time = '9:41' }) {
+  const c = dark ? '#fff' : '#000';
+  return (
+    <div style={{
+      display: 'flex', gap: 154, alignItems: 'center', justifyContent: 'center',
+      padding: '21px 24px 19px', boxSizing: 'border-box',
+      position: 'relative', zIndex: 20, width: '100%',
+    }}>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', paddingTop: 1.5 }}>
+        <span style={{
+          fontFamily: '-apple-system, "SF Pro", system-ui', fontWeight: 590,
+          fontSize: 17, lineHeight: '22px', color: c,
+        }}>{time}</span>
+      </div>
+      <div style={{ flex: 1, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, paddingTop: 1, paddingRight: 1 }}>
+        <svg width="19" height="12" viewBox="0 0 19 12">
+          <rect x="0" y="7.5" width="3.2" height="4.5" rx="0.7" fill={c}/>
+          <rect x="4.8" y="5" width="3.2" height="7" rx="0.7" fill={c}/>
+          <rect x="9.6" y="2.5" width="3.2" height="9.5" rx="0.7" fill={c}/>
+          <rect x="14.4" y="0" width="3.2" height="12" rx="0.7" fill={c}/>
+        </svg>
+        <svg width="17" height="12" viewBox="0 0 17 12">
+          <path d="M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z" fill={c}/>
+          <path d="M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z" fill={c}/>
+          <circle cx="8.5" cy="10.5" r="1.5" fill={c}/>
+        </svg>
+        <svg width="27" height="13" viewBox="0 0 27 13">
+          <rect x="0.5" y="0.5" width="23" height="12" rx="3.5" stroke={c} strokeOpacity="0.35" fill="none"/>
+          <rect x="2" y="2" width="20" height="9" rx="2" fill={c}/>
+          <path d="M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z" fill={c} fillOpacity="0.4"/>
+        </svg>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Liquid glass pill — blur + tint + shine
+// ─────────────────────────────────────────────────────────────
+function IOSGlassPill({ children, dark = false, style = {} }) {
+  return (
+    <div style={{
+      height: 44, minWidth: 44, borderRadius: 9999,
+      position: 'relative', overflow: 'hidden',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      boxShadow: dark
+        ? '0 2px 6px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.2)'
+        : '0 1px 3px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.06)',
+      ...style,
+    }}>
+      {/* blur + tint */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.28)' : 'rgba(255,255,255,0.5)',
+      }} />
+      {/* shine */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 9999,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15), inset -1px -1px 1px rgba(255,255,255,0.08)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+      }} />
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', padding: '0 4px' }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Navigation bar — glass pills + large title
+// ─────────────────────────────────────────────────────────────
+function IOSNavBar({ title = 'Title', dark = false, trailingIcon = true }) {
+  const muted = dark ? 'rgba(255,255,255,0.6)' : '#404040';
+  const text = dark ? '#fff' : '#000';
+  const pillIcon = (content) => (
+    <IOSGlassPill dark={dark}>
+      <div style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {content}
+      </div>
+    </IOSGlassPill>
+  );
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', gap: 10,
+      paddingTop: 62, paddingBottom: 10, position: 'relative', zIndex: 5,
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '0 16px',
+      }}>
+        {/* back chevron */}
+        {pillIcon(
+          <svg width="12" height="20" viewBox="0 0 12 20" fill="none" style={{ marginLeft: -1 }}>
+            <path d="M10 2L2 10l8 8" stroke={muted} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        )}
+        {/* trailing ellipsis */}
+        {trailingIcon && pillIcon(
+          <svg width="22" height="6" viewBox="0 0 22 6">
+            <circle cx="3" cy="3" r="2.5" fill={muted}/>
+            <circle cx="11" cy="3" r="2.5" fill={muted}/>
+            <circle cx="19" cy="3" r="2.5" fill={muted}/>
+          </svg>
+        )}
+      </div>
+      {/* large title */}
+      <div style={{
+        padding: '0 16px',
+        fontFamily: '-apple-system, system-ui',
+        fontSize: 34, fontWeight: 700, lineHeight: '41px',
+        color: text, letterSpacing: 0.4,
+      }}>{title}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Grouped list (inset card, r:26) + row (52px)
+// ─────────────────────────────────────────────────────────────
+function IOSListRow({ title, detail, icon, chevron = true, isLast = false, dark = false }) {
+  const text = dark ? '#fff' : '#000';
+  const sec = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const ter = dark ? 'rgba(235,235,245,0.3)' : 'rgba(60,60,67,0.3)';
+  const sep = dark ? 'rgba(84,84,88,0.65)' : 'rgba(60,60,67,0.12)';
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', minHeight: 52,
+      padding: '0 16px', position: 'relative',
+      fontFamily: '-apple-system, system-ui', fontSize: 17,
+      letterSpacing: -0.43,
+    }}>
+      {icon && (
+        <div style={{
+          width: 30, height: 30, borderRadius: 7, background: icon,
+          marginRight: 12, flexShrink: 0,
+        }} />
+      )}
+      <div style={{ flex: 1, color: text }}>{title}</div>
+      {detail && <span style={{ color: sec, marginRight: 6 }}>{detail}</span>}
+      {chevron && (
+        <svg width="8" height="14" viewBox="0 0 8 14" style={{ flexShrink: 0 }}>
+          <path d="M1 1l6 6-6 6" stroke={ter} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      )}
+      {!isLast && (
+        <div style={{
+          position: 'absolute', bottom: 0, right: 0,
+          left: icon ? 58 : 16, height: 0.5, background: sep,
+        }} />
+      )}
+    </div>
+  );
+}
+
+function IOSList({ header, children, dark = false }) {
+  const hc = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
+  const bg = dark ? '#1C1C1E' : '#fff';
+  return (
+    <div>
+      {header && (
+        <div style={{
+          fontFamily: '-apple-system, system-ui', fontSize: 13,
+          color: hc, textTransform: 'uppercase',
+          padding: '8px 36px 6px', letterSpacing: -0.08,
+        }}>{header}</div>
+      )}
+      <div style={{
+        background: bg, borderRadius: 26,
+        margin: '0 16px', overflow: 'hidden',
+      }}>{children}</div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Device frame
+// ─────────────────────────────────────────────────────────────
+function IOSDevice({
+  children, width = 402, height = 874, dark = false,
+  title, keyboard = false,
+}) {
+  return (
+    <div style={{
+      width, height, borderRadius: 48, overflow: 'hidden',
+      position: 'relative', background: dark ? '#000' : '#F2F2F7',
+      boxShadow: '0 40px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.12)',
+      fontFamily: '-apple-system, system-ui, sans-serif',
+      WebkitFontSmoothing: 'antialiased',
+    }}>
+      {/* dynamic island */}
+      <div style={{
+        position: 'absolute', top: 11, left: '50%', transform: 'translateX(-50%)',
+        width: 126, height: 37, borderRadius: 24, background: '#000', zIndex: 50,
+      }} />
+      {/* status bar (absolute) */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10 }}>
+        <IOSStatusBar dark={dark} />
+      </div>
+      {/* nav + content */}
+      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {title !== undefined && <IOSNavBar title={title} dark={dark} />}
+        <div style={{ flex: 1, overflow: 'auto' }}>{children}</div>
+        {keyboard && <IOSKeyboard dark={dark} />}
+      </div>
+      {/* home indicator — always on top */}
+      <div style={{
+        position: 'absolute', bottom: 0, left: 0, right: 0, zIndex: 60,
+        height: 34, display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
+        paddingBottom: 8, pointerEvents: 'none',
+      }}>
+        <div style={{
+          width: 139, height: 5, borderRadius: 100,
+          background: dark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.25)',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
+// Keyboard — iOS 26 liquid glass
+// ─────────────────────────────────────────────────────────────
+function IOSKeyboard({ dark = false }) {
+  const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
+  const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
+  const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
+
+  // special-key icons
+  const icons = {
+    shift: <svg width="19" height="17" viewBox="0 0 19 17"><path d="M9.5 1L1 9.5h4.5V16h8V9.5H18L9.5 1z" fill={glyph}/></svg>,
+    del: <svg width="23" height="17" viewBox="0 0 23 17"><path d="M7 1h13a2 2 0 012 2v11a2 2 0 01-2 2H7l-6-7.5L7 1z" fill="none" stroke={glyph} strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 5l7 7M17 5l-7 7" stroke={glyph} strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    ret: <svg width="20" height="14" viewBox="0 0 20 14"><path d="M18 1v6H4m0 0l4-4M4 7l4 4" fill="none" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  };
+
+  const key = (content, { w, flex, ret, fs = 25, k } = {}) => (
+    <div key={k} style={{
+      height: 42, borderRadius: 8.5,
+      flex: flex ? 1 : undefined, width: w, minWidth: 0,
+      background: ret ? '#08f' : keyBg,
+      boxShadow: '0 1px 0 rgba(0,0,0,0.075)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      fontFamily: '-apple-system, "SF Compact", system-ui',
+      fontSize: fs, fontWeight: 458, color: ret ? '#fff' : glyph,
+    }}>{content}</div>
+  );
+
+  const row = (keys, pad = 0) => (
+    <div style={{ display: 'flex', gap: 6.5, justifyContent: 'center', padding: `0 ${pad}px` }}>
+      {keys.map(l => key(l, { flex: true, k: l }))}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position: 'relative', zIndex: 15, borderRadius: 27, overflow: 'hidden',
+      padding: '11px 0 2px',
+      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      boxShadow: dark
+        ? '0 -2px 20px rgba(0,0,0,0.09)'
+        : '0 -1px 6px rgba(0,0,0,0.018), 0 -3px 20px rgba(0,0,0,0.012)',
+    }}>
+      {/* liquid glass bg — same recipe as nav pills */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        backdropFilter: 'blur(12px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(180%)',
+        background: dark ? 'rgba(120,120,128,0.14)' : 'rgba(255,255,255,0.25)',
+      }} />
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 27,
+        boxShadow: dark
+          ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15)'
+          : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
+        border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
+        pointerEvents: 'none',
+      }} />
+
+      {/* autocorrect bar */}
+      <div style={{
+        display: 'flex', gap: 20, alignItems: 'center',
+        padding: '8px 22px 13px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {['"The"', 'the', 'to'].map((w, i) => (
+          <React.Fragment key={i}>
+            {i > 0 && <div style={{ width: 1, height: 25, background: '#ccc', opacity: 0.3 }} />}
+            <div style={{
+              flex: 1, textAlign: 'center',
+              fontFamily: '-apple-system, system-ui', fontSize: 17,
+              color: sugg, letterSpacing: -0.43, lineHeight: '22px',
+            }}>{w}</div>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* key layout */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: 13,
+        padding: '0 6.5px', width: '100%', boxSizing: 'border-box',
+        position: 'relative',
+      }}>
+        {row(['q','w','e','r','t','y','u','i','o','p'])}
+        {row(['a','s','d','f','g','h','j','k','l'], 20)}
+        <div style={{ display: 'flex', gap: 14.25, alignItems: 'center' }}>
+          {key(icons.shift, { w: 45, k: 'shift' })}
+          <div style={{ display: 'flex', gap: 6.5, flex: 1 }}>
+            {['z','x','c','v','b','n','m'].map(l => key(l, { flex: true, k: l }))}
+          </div>
+          {key(icons.del, { w: 45, k: 'del' })}
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          {key('ABC', { w: 92.25, fs: 18, k: 'abc' })}
+          {key('', { flex: true, k: 'space' })}
+          {key(icons.ret, { w: 92.25, ret: true, k: 'ret' })}
+        </div>
+      </div>
+
+      {/* bottom spacer (emoji+mic area, icons omitted) */}
+      <div style={{ height: 56, width: '100%', position: 'relative' }} />
+    </div>
+  );
+}
+
+
+
+
+
+// ─── DESIGN TOKENS ───────────────────────────────────────────
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accentColor": "#C8FF00",
+  "accentHue": "volt",
+  "cardStyle": "frosted",
+  "animSpeed": 1
+}/*EDITMODE-END*/;
+
+const ACCENT_PRESETS = {
+  volt:   { primary: '#C8FF00', glow: 'rgba(200,255,0,0.25)',   dim: 'rgba(200,255,0,0.1)'  },
+  violet: { primary: '#BF5FFF', glow: 'rgba(191,95,255,0.25)',  dim: 'rgba(191,95,255,0.1)' },
+  cyan:   { primary: '#00E5FF', glow: 'rgba(0,229,255,0.25)',   dim: 'rgba(0,229,255,0.1)'  },
+};
+
+// ─── SHARED PRIMITIVES ───────────────────────────────────────
+function GlassCard({ children, style = {}, glow = false, accent }) {
+  return (
+    <div style={{
+      background: 'rgba(255,255,255,0.055)',
+      border: '0.5px solid rgba(255,255,255,0.12)',
+      borderRadius: 24,
+      backdropFilter: 'blur(20px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      position: 'relative',
+      overflow: 'hidden',
+      boxShadow: glow
+        ? `0 0 40px ${accent?.glow || 'rgba(200,255,0,0.15)'}, 0 2px 24px rgba(0,0,0,0.4)`
+        : '0 2px 24px rgba(0,0,0,0.35)',
+      ...style,
+    }}>
+      {/* top shine */}
+      <div style={{
+        position: 'absolute', top: 0, left: 0, right: 0, height: 1,
+        background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent)',
+        pointerEvents: 'none',
+      }} />
+      {children}
+    </div>
+  );
+}
+
+function Pill({ children, style = {} }) {
+  return (
+    <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 4,
+      padding: '3px 10px', borderRadius: 99,
+      background: 'rgba(255,255,255,0.08)',
+      border: '0.5px solid rgba(255,255,255,0.14)',
+      fontSize: 11, fontWeight: 600, letterSpacing: 0.4,
+      color: 'rgba(255,255,255,0.7)',
+      ...style,
+    }}>{children}</span>
+  );
+}
+
+function AccentText({ children, accent }) {
+  return <span style={{ color: accent.primary }}>{children}</span>;
+}
+
+// ─── SPARKLINE CHART ─────────────────────────────────────────
+function SparkLine({ data, color, height = 48, width = 120, animated = true }) {
+  const max = Math.max(...data), min = Math.min(...data);
+  const range = max - min || 1;
+  const pts = data.map((v, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((v - min) / range) * (height * 0.8) - height * 0.1;
+    return `${x},${y}`;
+  }).join(' ');
+
+  const gradId = `sg${Math.random().toString(36).slice(2,6)}`;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={gradId} x1="0" x2="0" y1="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {/* fill area */}
+      <path
+        d={`M ${pts.split(' ')[0]} ${pts.split(' ').slice(1).map(p=>`L ${p}`).join(' ')} L ${width},${height} L 0,${height} Z`}
+        fill={`url(#${gradId})`}
+      />
+      {/* line */}
+      <polyline
+        points={pts}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={animated ? 'draw-line' : ''}
+      />
+      {/* end dot */}
+      <circle
+        cx={parseFloat(pts.split(' ').pop().split(',')[0])}
+        cy={parseFloat(pts.split(' ').pop().split(',')[1])}
+        r="3.5" fill={color}
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
+      />
+    </svg>
+  );
+}
+
+// ─── RING CHART ──────────────────────────────────────────────
+function Ring({ pct, color, size = 56, stroke = 5 }) {
+  const r = (size - stroke) / 2;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * pct;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none"
+        stroke="rgba(255,255,255,0.08)" strokeWidth={stroke} />
+      <circle cx={size/2} cy={size/2} r={r} fill="none"
+        stroke={color} strokeWidth={stroke}
+        strokeDasharray={`${dash} ${circ}`}
+        strokeLinecap="round"
+        transform={`rotate(-90 ${size/2} ${size/2})`}
+        style={{ filter: `drop-shadow(0 0 6px ${color})`, transition: 'stroke-dasharray 1s ease' }}
+      />
+    </svg>
+  );
+}
+
+// ─── MOCK DATA ────────────────────────────────────────────────
+const weekPlan = [
+  { day: 'Mon', type: 'Easy', dist: 6.4, pace: '5:45', done: true,  label: 'Recovery Run' },
+  { day: 'Tue', type: 'Rest', dist: 0,   pace: '—',    done: true,  label: 'Active Recovery' },
+  { day: 'Wed', type: 'Tempo', dist: 8,  pace: '4:55', done: false, label: 'Threshold Intervals' },
+  { day: 'Thu', type: 'Easy', dist: 5,   pace: '5:50', done: false, label: 'Easy Aerobic' },
+  { day: 'Fri', type: 'Rest', dist: 0,   pace: '—',    done: false, label: 'Complete Rest' },
+  { day: 'Sat', type: 'Long', dist: 18,  pace: '5:30', done: false, label: 'Long Run' },
+  { day: 'Sun', type: 'Easy', dist: 7,   pace: '5:55', done: false, label: 'Shake-Out' },
+];
+
+const typeColors = {
+  Easy: '#6BF0A0', Tempo: '#FF8C42', Long: '#BF5FFF', Rest: 'rgba(255,255,255,0.25)'
+};
+
+const hrData = [72, 68, 75, 82, 77, 88, 92, 85, 78, 73, 70, 68, 72, 76];
+const paceData = [5.9, 5.8, 5.7, 5.5, 5.6, 5.4, 5.3, 5.2, 5.4, 5.3, 5.1, 5.0, 5.1, 4.95];
+
+const mockReplies = [
+  "Your HRV trend looks really solid this week — up 12% from baseline. Your body is adapting well to the load. 💪",
+  "Based on yesterday's workout, I'd suggest keeping today's pace at 5:50/km. No need to push — you're building your aerobic base.",
+  "Your sleep data shows deep sleep at 1h42m last night. That's below optimal for race prep — try a 20-min wind-down routine tonight.",
+  "You're right on track for a sub-20 5K. Current fitness projects a 19:48 at current trajectory. Keep the tempo sessions consistent.",
+  "Recovery looks great! HRV is at 82ms — that's your highest this month. You're primed for a quality session today.",
+];
+
+// ─── DASHBOARD SCREEN ─────────────────────────────────────────
+function DashboardScreen({ accent }) {
+  const today = weekPlan.find(d => !d.done && d.type !== 'Rest') || weekPlan[2];
+
+  return (
+    <div style={{ padding: '0 16px 100px', color: '#fff' }}>
+
+      {/* Greeting */}
+      <div className="fade-in-up" style={{ padding: '20px 4px 16px' }}>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', letterSpacing: 0.3, marginBottom: 4 }}>
+          SUNDAY · WEEK 7 OF 16
+        </div>
+        <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1.2 }}>
+          Good morning, Alex 👋
+        </div>
+        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginTop: 4 }}>
+          Your body is <span style={{ color: accent.primary }}>race-ready</span> today.
+        </div>
+      </div>
+
+      {/* Next Session Card */}
+      <GlassCard glow accent={accent} style={{ marginBottom: 14 }} >
+        <div style={{ padding: '18px 20px 20px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div>
+              <Pill style={{ marginBottom: 8, color: accent.primary, background: accent.dim, borderColor: accent.primary + '44' }}>
+                <span style={{ width: 5, height: 5, borderRadius: '50%', background: accent.primary, display:'inline-block' }} />
+                NEXT SESSION
+              </Pill>
+              <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: -0.5 }}>{today.label}</div>
+              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>Wednesday · Tempo</div>
+            </div>
+            <Ring pct={0.72} color={accent.primary} size={52} stroke={4} />
+          </div>
+
+          {/* Stats row */}
+          <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+            {[
+              { label: 'DISTANCE', val: `${today.dist} km` },
+              { label: 'TARGET PACE', val: `${today.pace}/km` },
+              { label: 'EFFORT', val: 'Zone 4' },
+            ].map(s => (
+              <div key={s.label} style={{
+                flex: 1, background: 'rgba(255,255,255,0.05)', borderRadius: 14,
+                padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)',
+              }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.6, marginBottom: 4 }}>{s.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#fff' }}>{s.val}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pace chart */}
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5, marginBottom: 6 }}>PACE TREND — LAST 14 SESSIONS</div>
+            <SparkLine data={paceData} color={accent.primary} height={52} width={310} />
+          </div>
+
+          {/* CTA */}
+          <button style={{
+            width: '100%', height: 50, borderRadius: 16,
+            background: accent.primary, border: 'none', cursor: 'pointer',
+            fontSize: 15, fontWeight: 700, color: '#0A0A0C',
+            letterSpacing: 0.3,
+            boxShadow: `0 0 24px ${accent.glow}`,
+            transition: 'transform 0.12s, box-shadow 0.12s',
+          }}
+            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
+            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            Start Session →
+          </button>
+        </div>
+      </GlassCard>
+
+      {/* Health Widgets */}
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.8, marginBottom: 8, paddingLeft: 4 }}>
+        HEALTH DATA · SYNCED 6 MIN AGO
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        {[
+          { label: 'HRV', val: '82', unit: 'ms',  sub: '+12% this week', ring: 0.82, color: '#6BF0A0', data: hrData },
+          { label: 'SLEEP', val: '7.2', unit: 'hr', sub: 'Deep: 1h 42m',   ring: 0.72, color: '#8B9EFF', data: [6,7,6.5,8,7.2,6.8,7.5,7.2,7.8,7,7.2,7.4,7.1,7.2] },
+          { label: 'READINESS', val: '91', unit: '/100', sub: 'Ready to train', ring: 0.91, color: accent.primary, data: [70,75,80,78,85,82,88,90,86,88,91,89,90,91] },
+          { label: 'RESTING HR', val: '52', unit: 'bpm', sub: 'Personal best',  ring: 0.55, color: '#FF8C42', data: [62,60,58,59,57,56,55,56,54,55,53,54,52,52] },
+        ].map((w, i) => (
+          <GlassCard key={w.label} style={{ animationDelay: `${i*0.08}s` }}>
+            <div className="fade-in-up" style={{ padding: '14px 14px 12px', animationDelay: `${i*0.1}s` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.6 }}>{w.label}</div>
+                <Ring pct={w.ring} color={w.color} size={28} stroke={3} />
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: -0.5, color: '#fff' }}>
+                {w.val}<span style={{ fontSize: 12, fontWeight: 500, color: 'rgba(255,255,255,0.4)', marginLeft: 2 }}>{w.unit}</span>
+              </div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', marginBottom: 8 }}>{w.sub}</div>
+              <SparkLine data={w.data} color={w.color} height={30} width={120} />
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* Weekly volume */}
+      <GlassCard>
+        <div style={{ padding: '16px 18px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.6 }}>WEEKLY VOLUME</div>
+              <div style={{ fontSize: 20, fontWeight: 700, marginTop: 2 }}>
+                <AccentText accent={accent}>44.4 km</AccentText>
+                <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', fontWeight: 400, marginLeft: 6 }}>of 50 km goal</span>
+              </div>
+            </div>
+            <Pill style={{ color: '#6BF0A0', background: 'rgba(107,240,160,0.1)' }}>↑ 8% vs last week</Pill>
+          </div>
+          {/* bar chart */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'flex-end', height: 52 }}>
+            {weekPlan.map((d, i) => {
+              const maxDist = 18;
+              const h = d.dist > 0 ? Math.max(8, (d.dist / maxDist) * 52) : 6;
+              const color = d.done ? accent.primary : typeColors[d.type] || 'rgba(255,255,255,0.2)';
+              return (
+                <div key={d.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                  <div style={{
+                    width: '100%', height: h, borderRadius: 5,
+                    background: d.dist > 0 ? color : 'rgba(255,255,255,0.08)',
+                    opacity: d.done ? 1 : 0.55,
+                    boxShadow: d.done && d.dist > 0 ? `0 0 8px ${accent.glow}` : 'none',
+                    transition: 'height 0.6s cubic-bezier(.2,0,0,1)',
+                  }} />
+                  <div style={{ fontSize: 9.5, color: 'rgba(255,255,255,0.3)', letterSpacing: 0.2 }}>{d.day}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </GlassCard>
+    </div>
+  );
+}
+
+// ─── PLAN GENERATOR SCREEN ───────────────────────────────────
+const GOALS = [
+  { id: 'sub20', label: 'Sub-20 5K', icon: '⚡️', desc: 'Break 4:00/km pace', time: '8 weeks' },
+  { id: 'hm',    label: 'Half Marathon', icon: '🏃', desc: 'Complete 21.1 km', time: '12 weeks' },
+  { id: 'fm',    label: 'Full Marathon', icon: '🏆', desc: '42.2 km PR', time: '16 weeks' },
+  { id: 'speed', label: 'Speed Builder', icon: '🔥', desc: '1K time trial PR', time: '6 weeks' },
+];
+
+const LEVELS = ['Beginner', 'Intermediate', 'Advanced'];
+
+function PlanScreen({ accent }) {
+  const [step, setStep] = React.useState(0); // 0=goal, 1=level, 2=loading, 3=plan
+  const [selectedGoal, setSelectedGoal] = React.useState(null);
+  const [selectedLevel, setSelectedLevel] = React.useState(null);
+  const [loadPct, setLoadPct] = React.useState(0);
+  const [loadMsg, setLoadMsg] = React.useState('Syncing health data...');
+
+  const msgs = [
+    'Syncing health data...',
+    'Analyzing HRV trends...',
+    'Calculating optimal load...',
+    'Building your plan...',
+    'Personalizing intensities...',
+  ];
+
+  const startLoading = () => {
+    setStep(2);
+    setLoadPct(0);
+    let pct = 0, msgI = 0;
+    const iv = setInterval(() => {
+      pct += Math.random() * 18 + 4;
+      msgI = Math.floor((pct / 100) * msgs.length);
+      setLoadMsg(msgs[Math.min(msgI, msgs.length - 1)]);
+      setLoadPct(Math.min(pct, 100));
+      if (pct >= 100) { clearInterval(iv); setTimeout(() => setStep(3), 400); }
+    }, 320);
+  };
+
+  return (
+    <div style={{ padding: '0 16px 100px', color: '#fff' }}>
+      <div style={{ padding: '20px 4px 20px' }}>
+        <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', letterSpacing: 0.3, marginBottom: 4 }}>AI COACH</div>
+        <div style={{ fontSize: 26, fontWeight: 700, letterSpacing: -0.5 }}>Build Your Plan</div>
+      </div>
+
+      {/* Step indicator */}
+      {step < 2 && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 22 }}>
+          {[0, 1].map(i => (
+            <div key={i} style={{
+              height: 3, flex: 1, borderRadius: 99,
+              background: i <= step ? accent.primary : 'rgba(255,255,255,0.12)',
+              transition: 'background 0.3s',
+              boxShadow: i <= step ? `0 0 8px ${accent.glow}` : 'none',
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Step 0 — Goal selection */}
+      {step === 0 && (
+        <div className="fade-in-up">
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>What's your goal?</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {GOALS.map(g => (
+              <GlassCard key={g.id}
+                glow={selectedGoal === g.id}
+                accent={accent}
+                style={{ cursor: 'pointer', transition: 'all 0.2s', border: selectedGoal === g.id ? `0.5px solid ${accent.primary}66` : undefined }}
+              >
+                <div style={{ padding: '16px 18px', display: 'flex', alignItems: 'center', gap: 14 }}
+                  onClick={() => setSelectedGoal(g.id)}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 14, fontSize: 22,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: selectedGoal === g.id ? accent.dim : 'rgba(255,255,255,0.06)',
+                    border: selectedGoal === g.id ? `0.5px solid ${accent.primary}55` : '0.5px solid rgba(255,255,255,0.08)',
+                    transition: 'all 0.2s',
+                  }}>{g.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: selectedGoal === g.id ? accent.primary : '#fff' }}>{g.label}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>{g.desc} · {g.time}</div>
+                  </div>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: `1.5px solid ${selectedGoal === g.id ? accent.primary : 'rgba(255,255,255,0.2)'}`,
+                    background: selectedGoal === g.id ? accent.primary : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'all 0.18s',
+                  }}>
+                    {selectedGoal === g.id && (
+                      <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="#0A0A0C" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    )}
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+          <button
+            disabled={!selectedGoal}
+            style={{
+              marginTop: 20, width: '100%', height: 50, borderRadius: 16,
+              background: selectedGoal ? accent.primary : 'rgba(255,255,255,0.08)',
+              color: selectedGoal ? '#0A0A0C' : 'rgba(255,255,255,0.25)',
+              border: 'none', cursor: selectedGoal ? 'pointer' : 'default',
+              fontSize: 15, fontWeight: 700, letterSpacing: 0.3,
+              transition: 'all 0.2s',
+              boxShadow: selectedGoal ? `0 0 20px ${accent.glow}` : 'none',
+            }}
+            onClick={() => selectedGoal && setStep(1)}
+          >
+            Continue →
+          </button>
+        </div>
+      )}
+
+      {/* Step 1 — Level */}
+      {step === 1 && (
+        <div className="fade-in-up">
+          <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 6 }}>Your experience level</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginBottom: 18 }}>
+            This helps calibrate weekly mileage and intensity.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {LEVELS.map(l => (
+              <GlassCard key={l}
+                glow={selectedLevel === l}
+                accent={accent}
+                style={{ cursor: 'pointer', border: selectedLevel === l ? `0.5px solid ${accent.primary}66` : undefined }}
+              >
+                <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 14 }}
+                  onClick={() => setSelectedLevel(l)}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: selectedLevel === l ? accent.primary : '#fff' }}>{l}</div>
+                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.38)', marginTop: 3 }}>
+                      {{
+                        Beginner: '< 20 km/week · first structured plan',
+                        Intermediate: '20–50 km/week · 1+ race completed',
+                        Advanced: '50+ km/week · performance focus',
+                      }[l]}
+                    </div>
+                  </div>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: `1.5px solid ${selectedLevel === l ? accent.primary : 'rgba(255,255,255,0.2)'}`,
+                    background: selectedLevel === l ? accent.primary : 'transparent',
+                    transition: 'all 0.18s',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {selectedLevel === l && (
+                      <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="#0A0A0C" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    )}
+                  </div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
+            <button onClick={() => setStep(0)} style={{
+              flex: 1, height: 50, borderRadius: 16, background: 'rgba(255,255,255,0.07)',
+              border: '0.5px solid rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.6)',
+              fontSize: 15, fontWeight: 600, cursor: 'pointer',
+            }}>← Back</button>
+            <button disabled={!selectedLevel} onClick={() => selectedLevel && startLoading()} style={{
+              flex: 2, height: 50, borderRadius: 16,
+              background: selectedLevel ? accent.primary : 'rgba(255,255,255,0.08)',
+              color: selectedLevel ? '#0A0A0C' : 'rgba(255,255,255,0.25)',
+              border: 'none', fontSize: 15, fontWeight: 700, cursor: selectedLevel ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              boxShadow: selectedLevel ? `0 0 20px ${accent.glow}` : 'none',
+            }}>Generate Plan</button>
+          </div>
+        </div>
+      )}
+
+      {/* Step 2 — Loading */}
+      {step === 2 && (
+        <div className="fade-in-up" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 60, gap: 32 }}>
+          {/* Orbiting animation */}
+          <div style={{ position: 'relative', width: 80, height: 80 }}>
+            <div style={{
+              position: 'absolute', inset: 0, borderRadius: '50%',
+              border: `1.5px solid ${accent.dim}`,
+              animation: 'spin 3s linear infinite',
+            }}>
+              <div style={{
+                position: 'absolute', top: -4, left: '50%', transform: 'translateX(-50%)',
+                width: 8, height: 8, borderRadius: '50%',
+                background: accent.primary,
+                boxShadow: `0 0 12px ${accent.primary}`,
+              }} />
+            </div>
+            <div style={{
+              position: 'absolute', inset: 14, borderRadius: '50%',
+              border: `1.5px solid rgba(255,255,255,0.08)`,
+              animation: 'spin 2s linear infinite reverse',
+            }}>
+              <div style={{
+                position: 'absolute', top: -3, left: '50%', transform: 'translateX(-50%)',
+                width: 6, height: 6, borderRadius: '50%',
+                background: '#8B9EFF',
+                boxShadow: '0 0 10px #8B9EFF',
+              }} />
+            </div>
+            <div style={{
+              position: 'absolute', inset: 26, borderRadius: '50%',
+              background: accent.dim, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18,
+            }}>🧠</div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Coach is analyzing…</div>
+            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>{loadMsg}</div>
+          </div>
+
+          {/* progress bar */}
+          <div style={{ width: '100%', height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', borderRadius: 99,
+              background: `linear-gradient(90deg, ${accent.primary}, ${accent.primary}99)`,
+              width: `${loadPct}%`,
+              transition: 'width 0.3s ease',
+              boxShadow: `0 0 8px ${accent.glow}`,
+            }} />
+          </div>
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>{Math.round(loadPct)}% complete</div>
+        </div>
+      )}
+
+      {/* Step 3 — Plan timeline */}
+      {step === 3 && (
+        <div className="fade-in-up">
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>
+                {GOALS.find(g => g.id === selectedGoal)?.label} Plan
+              </div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                {selectedLevel} · {GOALS.find(g => g.id === selectedGoal)?.time}
+              </div>
+            </div>
+            <Pill style={{ color: accent.primary, background: accent.dim }}>AI Generated</Pill>
+          </div>
+
+          {/* Stats bar */}
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            {[
+              { label: 'TOTAL RUNS', val: '48' },
+              { label: 'PEAK WEEK', val: '64 km' },
+              { label: 'TAPER', val: '2 wks' },
+            ].map(s => (
+              <GlassCard key={s.label} style={{ flex: 1 }}>
+                <div style={{ padding: '10px 12px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 17, fontWeight: 800, color: accent.primary }}>{s.val}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5, marginTop: 3 }}>{s.label}</div>
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          {/* Week timeline */}
+          <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.6, marginBottom: 10 }}>THIS WEEK</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {weekPlan.map((d, i) => (
+              <GlassCard key={d.day} style={{
+                animationDelay: `${i * 0.06}s`,
+                opacity: d.done ? 0.55 : 1,
+                border: d.type === 'Tempo' ? `0.5px solid ${accent.primary}44` : undefined,
+              }}>
+                <div className="slide-in-right" style={{
+                  padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 12,
+                  animationDelay: `${i * 0.07}s`,
+                }}>
+                  {/* day label */}
+                  <div style={{ width: 36, textAlign: 'center' }}>
+                    <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginBottom: 2 }}>{d.day}</div>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%', margin: '0 auto',
+                      background: d.done ? 'rgba(255,255,255,0.2)' : typeColors[d.type],
+                      boxShadow: !d.done && d.type !== 'Rest' ? `0 0 6px ${typeColors[d.type]}` : 'none',
+                    }} />
+                  </div>
+
+                  {/* type badge */}
+                  <div style={{
+                    width: 52, padding: '4px 0', borderRadius: 8, textAlign: 'center',
+                    background: d.dist > 0 ? typeColors[d.type] + '22' : 'rgba(255,255,255,0.04)',
+                    border: `0.5px solid ${d.dist > 0 ? typeColors[d.type] + '44' : 'rgba(255,255,255,0.06)'}`,
+                    fontSize: 10, fontWeight: 700, color: d.dist > 0 ? typeColors[d.type] : 'rgba(255,255,255,0.3)',
+                    letterSpacing: 0.3,
+                  }}>{d.type}</div>
+
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: d.done ? 'rgba(255,255,255,0.4)' : '#fff' }}>{d.label}</div>
+                    {d.dist > 0 && (
+                      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>
+                        {d.dist} km · {d.pace}/km
+                      </div>
+                    )}
+                  </div>
+
+                  {d.done ? (
+                    <div style={{
+                      width: 22, height: 22, borderRadius: '50%',
+                      background: 'rgba(107,240,160,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <svg width="10" height="8" viewBox="0 0 10 8"><path d="M1 4l3 3 5-6" stroke="#6BF0A0" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </div>
+                  ) : (
+                    <svg width="6" height="12" viewBox="0 0 6 12">
+                      <path d="M1 1l4 5-4 5" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+
+          <button style={{
+            marginTop: 18, width: '100%', height: 50, borderRadius: 16,
+            background: accent.primary, border: 'none', cursor: 'pointer',
+            fontSize: 15, fontWeight: 700, color: '#0A0A0C',
+            boxShadow: `0 0 24px ${accent.glow}`,
+          }}
+            onClick={() => { setStep(0); setSelectedGoal(null); setSelectedLevel(null); }}
+          >
+            Save Plan to Calendar
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── COACH CHAT SCREEN ───────────────────────────────────────
+function ChatScreen({ accent }) {
+  const [messages, setMessages] = React.useState([
+    { role: 'coach', text: "Hey Alex! I've reviewed your latest health data. Your HRV is at an all-time high this month. What's on your mind today?", ts: '9:38 AM' },
+  ]);
+  const [input, setInput] = React.useState('');
+  const [typing, setTyping] = React.useState(false);
+  const scrollRef = React.useRef(null);
+  const replyIdx = React.useRef(0);
+
+  const send = () => {
+    if (!input.trim()) return;
+    const userMsg = { role: 'user', text: input, ts: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) };
+    setMessages(m => [...m, userMsg]);
+    setInput('');
+    setTyping(true);
+    setTimeout(() => {
+      const reply = mockReplies[replyIdx.current % mockReplies.length];
+      replyIdx.current++;
+      setTyping(false);
+      setMessages(m => [...m, { role: 'coach', text: reply, ts: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) }]);
+    }, 1800 + Math.random() * 600);
+  };
+
+  React.useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [messages, typing]);
+
+  const quickReplies = ['How do I improve HRV?', 'Am I overtrained?', 'Best pre-run meal?'];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', color: '#fff' }}>
+      {/* Coach header */}
+      <div style={{ padding: '20px 16px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: '50%',
+              background: `linear-gradient(135deg, ${accent.primary}, #8B9EFF)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 20, fontWeight: 700, color: '#0A0A0C',
+              boxShadow: `0 0 16px ${accent.glow}`,
+            }}>AI</div>
+            <div style={{
+              position: 'absolute', bottom: 1, right: 1,
+              width: 10, height: 10, borderRadius: '50%',
+              background: '#6BF0A0', border: '1.5px solid #0A0A0C',
+              boxShadow: '0 0 6px #6BF0A0',
+              animation: 'pulse-glow 2s ease-in-out infinite',
+            }} />
+          </div>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700 }}>Coach Aria</div>
+            <div style={{ fontSize: 12, color: '#6BF0A0' }}>● Online · AI-powered</div>
+          </div>
+          <div style={{ marginLeft: 'auto' }}>
+            <Pill>GPT-4o</Pill>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', padding: '16px 14px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {messages.map((m, i) => (
+          <div key={i} className="fade-in-up" style={{
+            display: 'flex', flexDirection: 'column',
+            alignItems: m.role === 'user' ? 'flex-end' : 'flex-start',
+            animationDelay: `${i * 0.04}s`,
+          }}>
+            {m.role === 'coach' && (
+              <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, maxWidth: '88%' }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+                  background: `linear-gradient(135deg, ${accent.primary}, #8B9EFF)`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 10, fontWeight: 700, color: '#0A0A0C',
+                }}>AI</div>
+                <div>
+                  <div style={{
+                    background: 'rgba(255,255,255,0.07)',
+                    border: '0.5px solid rgba(255,255,255,0.1)',
+                    borderRadius: '18px 18px 18px 4px',
+                    padding: '12px 14px',
+                    fontSize: 14, lineHeight: 1.5, color: 'rgba(255,255,255,0.9)',
+                    backdropFilter: 'blur(12px)',
+                  }}>{m.text}</div>
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4, marginLeft: 4 }}>{m.ts}</div>
+                </div>
+              </div>
+            )}
+            {m.role === 'user' && (
+              <div style={{ maxWidth: '80%' }}>
+                <div style={{
+                  background: accent.primary,
+                  borderRadius: '18px 18px 4px 18px',
+                  padding: '12px 14px',
+                  fontSize: 14, lineHeight: 1.5, color: '#0A0A0C', fontWeight: 500,
+                }}>{m.text}</div>
+                <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.25)', marginTop: 4, textAlign: 'right', marginRight: 4 }}>{m.ts}</div>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Typing indicator */}
+        {typing && (
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
+            <div style={{
+              width: 26, height: 26, borderRadius: '50%', flexShrink: 0,
+              background: `linear-gradient(135deg, ${accent.primary}, #8B9EFF)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, fontWeight: 700, color: '#0A0A0C',
+            }}>AI</div>
+            <div style={{
+              background: 'rgba(255,255,255,0.07)',
+              border: '0.5px solid rgba(255,255,255,0.1)',
+              borderRadius: '18px 18px 18px 4px',
+              padding: '14px 18px',
+              display: 'flex', gap: 5, alignItems: 'center',
+            }}>
+              {[0,1,2].map(j => (
+                <div key={j} style={{
+                  width: 6, height: 6, borderRadius: '50%',
+                  background: accent.primary,
+                  animation: `typing-dot 1.2s ease-in-out ${j * 0.2}s infinite`,
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick replies */}
+      {messages.length < 3 && (
+        <div style={{ padding: '0 14px 10px', display: 'flex', gap: 8, overflowX: 'auto' }}>
+          {quickReplies.map(q => (
+            <button key={q} onClick={() => { setInput(q); }} style={{
+              whiteSpace: 'nowrap', padding: '8px 14px', borderRadius: 99,
+              background: 'rgba(255,255,255,0.06)', border: `0.5px solid ${accent.primary}44`,
+              color: 'rgba(255,255,255,0.7)', fontSize: 12, cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}>{q}</button>
+          ))}
+        </div>
+      )}
+
+      {/* Input bar */}
+      <div style={{
+        padding: '10px 14px 20px',
+        borderTop: '0.5px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{
+          display: 'flex', gap: 10, alignItems: 'center',
+          background: 'rgba(255,255,255,0.07)',
+          border: '0.5px solid rgba(255,255,255,0.12)',
+          borderRadius: 26, padding: '8px 8px 8px 16px',
+          backdropFilter: 'blur(10px)',
+        }}>
+          <input
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && send()}
+            placeholder="Ask your coach anything…"
+            style={{
+              flex: 1, background: 'transparent', border: 'none', outline: 'none',
+              fontSize: 14, color: '#fff', fontFamily: 'inherit',
+            }}
+          />
+          <button onClick={send} style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: input.trim() ? accent.primary : 'rgba(255,255,255,0.1)',
+            border: 'none', cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'all 0.18s',
+            boxShadow: input.trim() ? `0 0 12px ${accent.glow}` : 'none',
+          }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <path d="M1 7h12M7 1l6 6-6 6" stroke={input.trim() ? '#0A0A0C' : 'rgba(255,255,255,0.3)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── TAB BAR ─────────────────────────────────────────────────
+const TABS = [
+  { id: 'home', label: 'Home', icon: (a) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M2 10L11 2l9 8v9a1 1 0 01-1 1H7a1 1 0 01-1-1v-6H7v6" stroke={a} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+      <rect x="7" y="13" width="4" height="8" rx="1" stroke={a} strokeWidth="1.7"/>
+    </svg>
+  )},
+  { id: 'plan', label: 'Plan', icon: (a) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <rect x="3" y="4" width="16" height="15" rx="3" stroke={a} strokeWidth="1.7"/>
+      <path d="M7 2v4M15 2v4M3 9h16" stroke={a} strokeWidth="1.7" strokeLinecap="round"/>
+      <path d="M7 13h2M13 13h2M7 17h2M13 17h2" stroke={a} strokeWidth="1.7" strokeLinecap="round"/>
+    </svg>
+  )},
+  { id: 'chat', label: 'Coach', icon: (a) => (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+      <path d="M11 2C6.03 2 2 5.69 2 10.2c0 2.36 1.05 4.49 2.74 6.02L4 20l3.86-1.67C8.84 18.76 9.9 19 11 19c4.97 0 9-3.69 9-8.2S15.97 2 11 2z" stroke={a} strokeWidth="1.7" strokeLinejoin="round"/>
+      <circle cx="7.5" cy="10.5" r="1" fill={a}/>
+      <circle cx="11" cy="10.5" r="1" fill={a}/>
+      <circle cx="14.5" cy="10.5" r="1" fill={a}/>
+    </svg>
+  )},
+];
+
+// ─── MAIN APP ─────────────────────────────────────────────────
+function App() {
+  const [tweaks, setTweaks] = React.useState(TWEAK_DEFAULTS);
+  const [tweakOpen, setTweakOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState('home');
+
+  const accent = ACCENT_PRESETS[tweaks.accentHue] || ACCENT_PRESETS.volt;
+
+  // Tweaks panel communication
+  React.useEffect(() => {
+    const onMsg = (e) => {
+      if (e.data?.type === '__activate_edit_mode') setTweakOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweakOpen(false);
+    };
+    window.addEventListener('message', onMsg);
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+    return () => window.removeEventListener('message', onMsg);
+  }, []);
+
+  const updateTweak = (key, val) => {
+    const next = { ...tweaks, [key]: val };
+    setTweaks(next);
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: next }, '*');
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {/* Background gradient orbs */}
+      <div style={{
+        position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 0,
+        background: '#080809',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', top: -80, left: -60, width: 300, height: 300,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${accent.glow} 0%, transparent 70%)`,
+          animation: 'pulse-glow 4s ease-in-out infinite',
+        }} />
+        <div style={{
+          position: 'absolute', bottom: 100, right: -80, width: 280, height: 280,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(139,158,255,0.12) 0%, transparent 70%)',
+          animation: 'pulse-glow 5s ease-in-out 1.5s infinite',
+        }} />
+      </div>
+
+      <IOSDevice dark width={393} height={852}>
+        {/* App content area */}
+        <div style={{
+          position: 'absolute', inset: 0, top: 59,
+          background: '#080809',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          {/* Overflow for orbs */}
+          <div style={{
+            position: 'absolute', top: -40, left: -40, width: 260, height: 260,
+            borderRadius: '50%',
+            background: `radial-gradient(circle, ${accent.glow} 0%, transparent 65%)`,
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+          <div style={{
+            position: 'absolute', bottom: 120, right: -60, width: 220, height: 220,
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(139,158,255,0.1) 0%, transparent 65%)',
+            pointerEvents: 'none', zIndex: 0,
+          }} />
+
+          {/* Screen content */}
+          <div style={{ flex: 1, overflowY: 'auto', position: 'relative', zIndex: 1 }}>
+            {activeTab === 'home' && <DashboardScreen accent={accent} />}
+            {activeTab === 'plan' && <PlanScreen accent={accent} />}
+            {activeTab === 'chat' && <ChatScreen accent={accent} />}
+          </div>
+
+          {/* Tab Bar */}
+          <div style={{
+            display: 'flex',
+            background: 'rgba(10,10,12,0.85)',
+            backdropFilter: 'blur(20px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(20px) saturate(200%)',
+            borderTop: '0.5px solid rgba(255,255,255,0.08)',
+            paddingBottom: 28,
+            position: 'relative', zIndex: 10,
+          }}>
+            {TABS.map(t => {
+              const active = activeTab === t.id;
+              return (
+                <button key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  style={{
+                    flex: 1, background: 'none', border: 'none', cursor: 'pointer',
+                    padding: '10px 0 6px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    transition: 'all 0.18s',
+                  }}
+                >
+                  {/* icon */}
+                  <div style={{
+                    transition: 'filter 0.18s, transform 0.18s',
+                    filter: active ? `drop-shadow(0 0 8px ${accent.primary})` : 'none',
+                    transform: active ? 'scale(1.1)' : 'scale(1)',
+                  }}>
+                    {t.icon(active ? accent.primary : 'rgba(255,255,255,0.3)')}
+                  </div>
+                  <span style={{
+                    fontSize: 10, fontWeight: active ? 700 : 500,
+                    color: active ? accent.primary : 'rgba(255,255,255,0.3)',
+                    letterSpacing: 0.2, transition: 'color 0.18s',
+                  }}>{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </IOSDevice>
+
+      {/* ── TWEAKS PANEL ─────────────────────────────────────── */}
+      {tweakOpen && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, width: 240,
+          background: 'rgba(18,18,22,0.95)',
+          border: '0.5px solid rgba(255,255,255,0.12)',
+          borderRadius: 20, padding: 20,
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 40px rgba(0,0,0,0.6)',
+          zIndex: 9999, color: '#fff',
+          fontFamily: '-apple-system, system-ui',
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 16, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.3 }}>Tweaks</div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8, letterSpacing: 0.5 }}>ACCENT COLOR</div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {Object.entries(ACCENT_PRESETS).map(([hue, p]) => (
+                <button key={hue} onClick={() => updateTweak('accentHue', hue)} style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: p.primary,
+                  border: tweaks.accentHue === hue ? `2px solid #fff` : '2px solid transparent',
+                  cursor: 'pointer',
+                  boxShadow: `0 0 10px ${p.glow}`,
+                  transition: 'transform 0.15s',
+                  transform: tweaks.accentHue === hue ? 'scale(1.15)' : 'scale(1)',
+                }} />
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 14 }}>
+            <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginBottom: 8, letterSpacing: 0.5 }}>SCREEN</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {[['home','Dashboard'],['plan','Plan'],['chat','Coach Chat']].map(([id,label]) => (
+                <button key={id} onClick={() => setActiveTab(id)} style={{
+                  padding: '7px 12px', borderRadius: 10, textAlign: 'left',
+                  background: activeTab === id ? accent.dim : 'rgba(255,255,255,0.04)',
+                  border: `0.5px solid ${activeTab === id ? accent.primary + '55' : 'transparent'}`,
+                  color: activeTab === id ? accent.primary : 'rgba(255,255,255,0.6)',
+                  fontSize: 13, fontWeight: activeTab === id ? 600 : 400,
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.15s',
+                }}>{label}</button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<div id="root"></div>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 120 80" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="80" fill="#080809"/>
+    <rect x="35" y="8" width="50" height="64" rx="8" fill="#111" stroke="#222" stroke-width="1"/>
+    <rect x="40" y="18" width="40" height="10" rx="5" fill="#C8FF00" opacity="0.8"/>
+    <rect x="40" y="32" width="30" height="4" rx="2" fill="#333"/>
+    <rect x="40" y="40" width="35" height="4" rx="2" fill="#222"/>
+    <rect x="40" y="48" width="25" height="4" rx="2" fill="#222"/>
+    <circle cx="75" cy="60" r="4" fill="#C8FF00" opacity="0.6"/>
+  </svg>
+</template>
+</body>
+</html>
