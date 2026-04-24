@@ -305,7 +305,7 @@ class SettingsScreen extends ConsumerWidget {
                     GestureDetector(
                       onTap: () => launchUrl(
                         Uri.parse(
-                            'https://github.com/andreasjunemann2/vo2_ai/blob/main/docs/privacy.md'),
+                            'https://andij71.github.io/VO2.ai/privacy/'),
                         mode: LaunchMode.externalApplication,
                       ),
                       child: const Row(
@@ -323,7 +323,7 @@ class SettingsScreen extends ConsumerWidget {
                         color: Color.fromRGBO(255, 255, 255, 0.08), height: 24),
                     GestureDetector(
                       onTap: () => launchUrl(
-                        Uri.parse('https://github.com/andreasjunemann2/vo2_ai'),
+                        Uri.parse('https://github.com/andij71/VO2.ai'),
                         mode: LaunchMode.externalApplication,
                       ),
                       child: const Row(

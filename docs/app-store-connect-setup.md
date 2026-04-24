@@ -29,7 +29,7 @@ Your AI running coach
 
 **Privacy Policy URL:**
 ```
-https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/privacy/
+https://andij71.github.io/VO2.ai/privacy/
 ```
 
 **Subscription Privacy Policy URL:** *leave blank (no subscriptions)*
@@ -48,7 +48,7 @@ Dein KI-Laufcoach
 
 **Privacy Policy URL (German):**
 ```
-https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/privacy-de/
+https://andij71.github.io/VO2.ai/privacy-de/
 ```
 
 ### General Information
@@ -205,13 +205,13 @@ training,marathon,5k,10k,halfmarathon,pace,coach,runner,vo2max,strava,fitness,wo
 ### Support URL (required)
 
 ```
-https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai/issues
+https://github.com/andij71/VO2.ai/issues
 ```
 
 ### Marketing URL (optional)
 
 ```
-https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/
+https://andij71.github.io/VO2.ai/
 ```
 
 ### Version (at the bottom)
@@ -416,7 +416,7 @@ under the user's own API key, which the user enters manually during
 onboarding. No user-supplied content is transmitted to any server we
 control. Our Privacy Manifest (PrivacyInfo.xcprivacy) declares zero
 data collection and zero tracking. The complete source code is
-open source at https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai — you
+open source at https://github.com/andij71/VO2.ai — you
 can verify every network call.
 
 Please let us know if you need additional documentation.

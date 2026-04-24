@@ -73,8 +73,8 @@ artifact. Replace the placeholders in ANGLE_BRACKETS before submitting.
 > After deletion, the app restarts at the medical disclaimer gate.
 >
 > ### Privacy
-> Privacy Policy: https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/privacy/
-> Source code:   https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai
+> Privacy Policy: https://andij71.github.io/VO2.ai/privacy/
+> Source code:   https://github.com/andij71/VO2.ai
 >
 > The Privacy Manifest (`PrivacyInfo.xcprivacy`) declares no tracking, no
 > data collection on our side, and only the standard Required Reason APIs

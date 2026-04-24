@@ -3,8 +3,8 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vo2_ai/data/database.dart';
-import 'package:vo2_ai/providers/chat_provider.dart';
+import 'package:app/data/database.dart';
+import 'package:app/providers/chat_provider.dart';
 
 void main() {
   late AppDatabase db;

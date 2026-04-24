@@ -146,7 +146,7 @@ notes on first submission.
 Replace with your actual GitHub repo:
 
 ```
-https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai/issues
+https://github.com/andij71/VO2.ai/issues
 ```
 
 ---
@@ -154,7 +154,7 @@ https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai/issues
 ## Marketing URL (optional)
 
 ```
-https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/
+https://andij71.github.io/VO2.ai/
 ```
 
 ---
@@ -162,7 +162,7 @@ https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/
 ## Privacy Policy URL (required)
 
 ```
-https://<YOUR-GITHUB-HANDLE>.github.io/vo2_ai/privacy/
+https://andij71.github.io/VO2.ai/privacy/
 ```
 
 ---

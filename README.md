@@ -1,16 +1,3 @@
-# vo2 ai
-# pace.ai
-
-Generiere basierend auf RunApp.html einen passenden Plan. 
-# OpenRouter (jeder soll sich in der App selbst in Openrouter anmelden klnnen)
-
-Flutter ?
-
-
-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
-
-
-
   Passend zu meiner bevorstehenden Elternzeit habe ich eine eigene
   Laufapp geschrieben — VO2.ai 🏃
 
@@ -34,8 +21,6 @@ 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
   Tech Stack: Flutter, Riverpod, Drift/SQLite, Strava API, OpenRouter
 
   Das Beste: Der gesamte Code ist Open Source.
-
-  👉 [GitHub Link]
 
   Ob Sub-20 5K oder Marathon-Vorbereitung — der AI Coach baut dir
   einen periodisierten Plan und passt ihn an, wenn sich was ändert.

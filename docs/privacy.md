@@ -18,9 +18,7 @@ For any privacy-related matter regarding this app, you can contact the developer
 
 > **Andreas Junemann**
 > Email: `andreasjunemann2@gmail.com`
-> Project: https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai
-
-Replace `<YOUR-GITHUB-HANDLE>` with the actual GitHub repository location before publishing.
+> Project: https://github.com/andij71/VO2.ai
 
 ## 2. Summary in plain language
 
@@ -128,7 +126,7 @@ This Privacy Policy can change as the app evolves. The effective date at the top
 
 ## 10. Open Source
 
-The complete source code of VO2.ai is available under an open-source license. You can inspect every API call, every piece of stored data, and every network endpoint used. See: https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai
+The complete source code of VO2.ai is available under an open-source license. You can inspect every API call, every piece of stored data, and every network endpoint used. See: https://github.com/andij71/VO2.ai
 
 ---
 

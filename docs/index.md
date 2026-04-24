@@ -9,4 +9,4 @@ Open-source AI running coach for iOS.
 
 - [Privacy Policy (English)](./privacy)
 - [Datenschutzerklärung (Deutsch)](./privacy-de)
-- [Source Code on GitHub](https://github.com/<YOUR-GITHUB-HANDLE>/vo2_ai)
+- [Source Code on GitHub](https://github.com/andij71/VO2.ai)

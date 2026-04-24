@@ -7,8 +7,8 @@ import 'package:strava_client/strava_client.dart';
 /// Thin wrapper around strava_client for VO2.ai.
 /// Auth is handled by the package via flutter_web_auth (in-app browser).
 class StravaService {
-  static const _clientId = '228637';
-  static const _clientSecret = 'f9eddeaa9dc315b56a13c06528f4dbe304f49a48';
+  static const _clientId = String.fromEnvironment('STRAVA_CLIENT_ID');
+  static const _clientSecret = String.fromEnvironment('STRAVA_CLIENT_SECRET');
   static const _redirectUrl = 'vo2ai://redirect';
   static const _callbackScheme = 'vo2ai';
 

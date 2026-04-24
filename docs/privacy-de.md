@@ -18,9 +18,7 @@ Bei Fragen zum Datenschutz rund um diese App kannst du dich wenden an:
 
 > **Andreas Junemann**
 > E-Mail: `andreasjunemann2@gmail.com`
-> Projekt: https://github.com/<DEIN-GITHUB-HANDLE>/vo2_ai
-
-Ersetze `<DEIN-GITHUB-HANDLE>` vor Veröffentlichung mit dem tatsächlichen Repository-Pfad.
+> Projekt: https://github.com/andij71/VO2.ai
 
 ## 2. Zusammenfassung in einfacher Sprache
 
@@ -128,7 +126,7 @@ Diese Erklärung kann sich mit der Weiterentwicklung der App ändern. Das Datum 
 
 ## 10. Open Source
 
-Der vollständige Quellcode von VO2.ai ist unter einer Open-Source-Lizenz verfügbar. Du kannst jeden API-Aufruf, jedes gespeicherte Datenfeld und jeden Netzwerk-Endpunkt nachvollziehen. Siehe: https://github.com/<DEIN-GITHUB-HANDLE>/vo2_ai
+Der vollständige Quellcode von VO2.ai ist unter einer Open-Source-Lizenz verfügbar. Du kannst jeden API-Aufruf, jedes gespeicherte Datenfeld und jeden Netzwerk-Endpunkt nachvollziehen. Siehe: https://github.com/andij71/VO2.ai
 
 ---
 

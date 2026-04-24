@@ -2,7 +2,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:vo2_ai/services/openrouter_service.dart';
+import 'package:app/services/openrouter_service.dart';
 
 class MockInterceptor extends Interceptor {
   final List<RequestOptions> requests = [];
