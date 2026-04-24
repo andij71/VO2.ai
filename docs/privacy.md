@@ -8,7 +8,7 @@ permalink: /privacy/
 
 *Last updated: April 23, 2026*
 
-**This page is available in [Deutsch](./privacy-de).**
+**This page is available in [Deutsch](../privacy-de/).**
 
 VO2.ai is an open-source iOS application developed as a personal, non-commercial project. This Privacy Policy explains what data the app handles, where it is processed, and what rights you have.
 

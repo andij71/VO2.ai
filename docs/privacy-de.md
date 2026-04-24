@@ -8,7 +8,7 @@ permalink: /privacy-de/
 
 *Stand: 23. April 2026*
 
-**Diese Seite ist auch auf [English](./privacy) verfügbar.**
+**Diese Seite ist auch auf [English](../privacy/) verfügbar.**
 
 VO2.ai ist eine quelloffene iOS-Anwendung, die als persönliches, nicht-kommerzielles Open-Source-Projekt entwickelt wird. Diese Datenschutzerklärung erklärt, welche Daten in der App verarbeitet werden, wo sie verarbeitet werden und welche Rechte du hast.
 

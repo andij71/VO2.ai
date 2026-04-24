@@ -304,9 +304,8 @@ class SettingsScreen extends ConsumerWidget {
                   children: [
                     GestureDetector(
                       onTap: () => launchUrl(
-                        Uri.parse(
-                            'https://andij71.github.io/VO2.ai/privacy/'),
-                        mode: LaunchMode.externalApplication,
+                        Uri.parse('https://andij71.github.io/VO2.ai/privacy/'),
+                        mode: LaunchMode.inAppBrowserView,
                       ),
                       child: const Row(
                         children: [
@@ -324,7 +323,7 @@ class SettingsScreen extends ConsumerWidget {
                     GestureDetector(
                       onTap: () => launchUrl(
                         Uri.parse('https://github.com/andij71/VO2.ai'),
-                        mode: LaunchMode.externalApplication,
+                        mode: LaunchMode.inAppBrowserView,
                       ),
                       child: const Row(
                         children: [
