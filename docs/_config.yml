@@ -1,3 +1,16 @@
 title: VO2.ai
-description: Open-source AI running coach for iOS
-theme: jekyll-theme-cayman
+description: Open-source AI running coach for iOS. Bring your own OpenRouter key. Your data stays on your device.
+author: Andreas Junemann
+url: https://andij71.github.io
+baseurl: /VO2.ai
+
+# No Jekyll theme — fully custom layouts in _layouts/
+# Remove default plugins we don't use
+plugins: []
+
+# Exclude dev/config files from the build
+exclude:
+  - README.md
+  - app-store-connect-setup.md
+  - app-store-copy.md
+  - app-store-review-notes.md
