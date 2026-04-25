@@ -1,10 +1,11 @@
 // test/widgets/glass_card_test.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/widgets/glass_card.dart';
-import 'package:app/widgets/accent_pill.dart';
-import 'package:app/widgets/pace_button.dart';
+import 'package:vo2_ai/widgets/glass_card.dart';
+import 'package:vo2_ai/widgets/accent_pill.dart';
+import 'package:vo2_ai/widgets/pace_button.dart';
 
 void main() {
   testWidgets('GlassCard renders child content', (tester) async {
@@ -23,11 +24,13 @@ void main() {
 
   testWidgets('PaceButton calls onPressed', (tester) async {
     var pressed = false;
-    await tester.pumpWidget(MaterialApp(
-      home: Scaffold(
-        body: PaceButton(
-          label: 'Start',
-          onPressed: () => pressed = true,
+    await tester.pumpWidget(ProviderScope(
+      child: MaterialApp(
+        home: Scaffold(
+          body: PaceButton(
+            label: 'Start',
+            onPressed: () => pressed = true,
+          ),
         ),
       ),
     ));

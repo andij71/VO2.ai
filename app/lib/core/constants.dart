@@ -22,6 +22,34 @@ class PaceColors {
   static const interval = Color(0xFF00E5FF);
 }
 
+/// Editorial brand palette — used on the "pre-functional" screens
+/// (Disclaimer, Welcome). Matches the public landing page typography
+/// and the wordmark asset (`app_logo_full.png`).
+///
+/// Once the user enters /auth, the dark `PaceColors` palette takes over.
+class BrandPalette {
+  /// Paper background — matches the cream of `app_logo_full.png`.
+  static const paper = Color(0xFFF2EBE0);
+
+  /// Slightly sunken paper for inset cards / scroll panels.
+  static const paperSunk = Color(0xFFEDE5D7);
+
+  /// Hairline border on paper (≈ 8% ink).
+  static const paperBorder = Color(0x141F1B16);
+
+  /// Primary text on paper.
+  static const ink = Color(0xFF1F1B16);
+
+  /// Secondary / supporting text on paper.
+  static const muted = Color(0xFF6B6258);
+
+  /// Disabled / fineprint text on paper.
+  static const subtle = Color(0xFF9A9388);
+
+  /// Coral accent — used sparingly (logo dot, key word in tagline).
+  static const accent = Color(0xFFC96442);
+}
+
 class AccentPreset {
   final Color primary;
   final Color glow;

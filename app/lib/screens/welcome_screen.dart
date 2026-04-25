@@ -2,65 +2,121 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../core/constants.dart';
-import '../widgets/pace_button.dart';
-import '../widgets/ambient_background.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final accent = AccentPreset.volt;
+    final eyebrowStyle = GoogleFonts.inter(
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 1.6,
+      color: BrandPalette.muted,
+    );
+    final taglineStyle = GoogleFonts.instrumentSerif(
+      fontSize: 24,
+      fontStyle: FontStyle.italic,
+      height: 1.35,
+      color: BrandPalette.ink,
+      letterSpacing: -0.2,
+    );
+    final finePrintStyle = GoogleFonts.inter(
+      fontSize: 12,
+      color: BrandPalette.muted,
+      height: 1.5,
+    );
+    final ctaStyle = GoogleFonts.inter(
+      fontSize: 15,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.2,
+      color: BrandPalette.paper,
+    );
 
     return Scaffold(
-      body: AmbientBackground(
-        accent: accent,
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Spacer(flex: 2),
-                // App icon
-                Container(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: [BoxShadow(color: accent.glow, blurRadius: 40)],
-                  ),
-                  child: ClipOval(
-                    child: Image.asset(
-                      'assets/app_logo.png',
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+      backgroundColor: BrandPalette.paper,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Spacer(flex: 2),
+
+              // Eyebrow
+              Text(
+                'OPEN-SOURCE iOS APP  ·  BRING YOUR OWN KEY',
+                style: eyebrowStyle,
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 28),
+
+              // Wordmark — uses the brand-style logo asset (italic serif + dot)
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 280),
+                child: Image.asset(
+                  'assets/app_logo_full.png',
+                  fit: BoxFit.contain,
                 ),
-                const SizedBox(height: 24),
-                Text(
-                  'VO2.ai',
-                  style: TextStyle(
-                    fontSize: 42,
-                    fontWeight: FontWeight.w800,
-                    color: accent.primary,
-                    letterSpacing: -1,
+              ),
+
+              const SizedBox(height: 28),
+
+              // Editorial tagline
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text.rich(
+                  TextSpan(
+                    style: taglineStyle,
+                    children: const [
+                      TextSpan(text: 'Your AI running coach.\n'),
+                      TextSpan(text: 'Without giving up '),
+                      TextSpan(
+                        text: 'your data',
+                        style: TextStyle(color: BrandPalette.accent),
+                      ),
+                      TextSpan(text: '.'),
+                    ],
                   ),
+                  textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 12),
-                const Text(
-                  'Your AI running coach',
-                  style: TextStyle(fontSize: 17, color: PaceColors.textSecondary),
-                ),
-                const Spacer(flex: 3),
-                PaceButton(
-                  label: 'Get Started',
+              ),
+
+              const Spacer(flex: 3),
+
+              // CTA — dark fill, cream text
+              SizedBox(
+                width: double.infinity,
+                height: 54,
+                child: FilledButton(
                   onPressed: () => context.go('/auth'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: BrandPalette.ink,
+                    foregroundColor: BrandPalette.paper,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text('Get started', style: ctaStyle),
                 ),
-                const SizedBox(height: 48),
-              ],
-            ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Fineprint
+              Text(
+                'Not a medical device. For training guidance only.',
+                style: finePrintStyle,
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 24),
+            ],
           ),
         ),
       ),

@@ -345,18 +345,23 @@ class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
                   ref.read(settingsProvider.notifier).setRunningDays(days);
                 },
                 child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  height: 44,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  width: 42,
+                  height: 42,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
+                    shape: BoxShape.circle,
                     color: selected
-                        ? accent.primary.withValues(alpha: 0.15)
-                        : const Color.fromRGBO(255, 255, 255, 0.04),
+                        ? accent.primary.withValues(alpha: 0.12)
+                        : PaceColors.cardBg,
                     border: Border.all(
                       color: selected
                           ? accent.primary.withValues(alpha: 0.5)
-                          : const Color.fromRGBO(255, 255, 255, 0.08),
+                          : PaceColors.cardBorder,
+                      width: 0.5,
                     ),
+                    boxShadow: selected
+                        ? [BoxShadow(color: accent.glow, blurRadius: 16, spreadRadius: -4)]
+                        : null,
                   ),
                   alignment: Alignment.center,
                   child: Text(

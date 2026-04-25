@@ -1,7 +1,7 @@
 // test/services/chat_service_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/services/chat_service.dart';
+import 'package:vo2_ai/services/chat_service.dart';
 
 void main() {
   test('buildContext includes plan summary', () {

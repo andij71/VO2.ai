@@ -90,25 +90,34 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/setup',
         builder: (context, state) => const GoalSetupScreen(),
       ),
-      ShellRoute(
-        builder: (context, state, child) => MainShell(child: child),
-        routes: [
-          GoRoute(
-            path: '/home',
-            builder: (context, state) => const DashboardScreen(),
-          ),
-          GoRoute(
-            path: '/plan',
-            builder: (context, state) => const PlanScreen(),
-          ),
-          GoRoute(
-            path: '/chat',
-            builder: (context, state) => const ChatScreen(),
-          ),
-          GoRoute(
-            path: '/settings',
-            builder: (context, state) => const SettingsScreen(),
-          ),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            MainShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/home',
+              builder: (context, state) => const DashboardScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/plan',
+              builder: (context, state) => const PlanScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/chat',
+              builder: (context, state) => const ChatScreen(),
+            ),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(
+              path: '/settings',
+              builder: (context, state) => const SettingsScreen(),
+            ),
+          ]),
         ],
       ),
     ],
@@ -116,34 +125,23 @@ final routerProvider = Provider<GoRouter>((ref) {
 });
 
 class MainShell extends ConsumerWidget {
-  final Widget child;
-  const MainShell({super.key, required this.child});
-
-  int _currentIndex(String location) {
-    if (location == '/plan') return 1;
-    if (location == '/chat') return 2;
-    if (location == '/settings') return 3;
-    return 0; // /home
-  }
+  final StatefulNavigationShell navigationShell;
+  const MainShell({super.key, required this.navigationShell});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location = GoRouterState.of(context).uri.path;
-    final index = _currentIndex(location);
     final accent = ref.watch(accentProvider);
 
     return Scaffold(
       body: AmbientBackground(
         accent: accent,
-        child: child,
+        child: navigationShell,
       ),
       bottomNavigationBar: _GlassTabBar(
-        currentIndex: index,
+        currentIndex: navigationShell.currentIndex,
         accent: accent,
-        onTap: (i) {
-          final routes = ['/home', '/plan', '/chat', '/settings'];
-          context.go(routes[i]);
-        },
+        onTap: (i) => navigationShell.goBranch(i,
+            initialLocation: i == navigationShell.currentIndex),
       ),
     );
   }

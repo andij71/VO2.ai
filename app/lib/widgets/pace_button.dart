@@ -1,9 +1,11 @@
 // lib/widgets/pace_button.dart
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants.dart';
+import '../providers/settings_provider.dart';
 
-class PaceButton extends StatefulWidget {
+class PaceButton extends ConsumerStatefulWidget {
   final String label;
   final VoidCallback? onPressed;
   final Color? color;
@@ -20,15 +22,15 @@ class PaceButton extends StatefulWidget {
   });
 
   @override
-  State<PaceButton> createState() => _PaceButtonState();
+  ConsumerState<PaceButton> createState() => _PaceButtonState();
 }
 
-class _PaceButtonState extends State<PaceButton> {
+class _PaceButtonState extends ConsumerState<PaceButton> {
   double _scale = 1.0;
 
   @override
   Widget build(BuildContext context) {
-    final accent = widget.color ?? AccentPreset.volt.primary;
+    final accent = widget.color ?? ref.watch(accentProvider).primary;
     final isEnabled = widget.enabled && widget.onPressed != null;
 
     return GestureDetector(

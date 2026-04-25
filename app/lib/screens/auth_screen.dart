@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../core/constants.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/glass_card.dart';
@@ -76,7 +77,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               ],
               const SizedBox(height: 24),
               PaceButton(
-                label: authState == AuthState.validating ? 'Validating...' : 'Connect',
+                label: authState == AuthState.validating
+                    ? 'Validating...'
+                    : 'Connect',
                 enabled: authState != AuthState.validating,
                 onPressed: () {
                   final key = _controller.text.trim();
@@ -89,11 +92,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               Center(
                 child: TextButton(
                   onPressed: () {
-                    // TODO: open openrouter.ai/keys in browser
+                    launchUrl(Uri.parse('https://openrouter.ai/keys'),
+                        mode: LaunchMode.inAppBrowserView);
                   },
                   child: const Text(
                     'Get an API key from OpenRouter',
-                    style: TextStyle(color: PaceColors.textSecondary, fontSize: 13),
+                    style: TextStyle(
+                        color: PaceColors.textSecondary, fontSize: 13),
                   ),
                 ),
               ),

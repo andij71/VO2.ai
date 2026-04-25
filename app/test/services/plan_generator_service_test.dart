@@ -1,7 +1,7 @@
 // test/services/plan_generator_service_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/services/plan_generator_service.dart';
+import 'package:vo2_ai/services/plan_generator_service.dart';
 
 void main() {
   test('buildSystemPrompt includes goal and level', () {

@@ -18,6 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final setup = ref.watch(settingsProvider);
     final strava = ref.watch(stravaProvider);
+    final accent = ref.watch(accentProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -25,18 +26,8 @@ class SettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           children: [
             const SizedBox(height: 20),
-            Row(
-              children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: const Icon(Icons.arrow_back_ios_rounded,
-                      color: PaceColors.textSecondary, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Text('Settings',
-                    style: Theme.of(context).textTheme.headlineLarge),
-              ],
-            ),
+            Text('Profile',
+                style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 32),
 
             // Profile section
@@ -128,11 +119,15 @@ class SettingsScreen extends ConsumerWidget {
                             onTap: () => ref
                                 .read(stravaProvider.notifier)
                                 .fetchActivities(),
-                            child: const Text('Refresh',
-                                style: TextStyle(
-                                    fontSize: 13,
-                                    color: Color(0xFFFC4C02),
-                                    fontWeight: FontWeight.w600)),
+                            behavior: HitTestBehavior.opaque,
+                            child: const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              child: Text('Refresh',
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: Color(0xFFFC4C02),
+                                      fontWeight: FontWeight.w600)),
+                            ),
                           ),
                         ],
                       ),
@@ -202,8 +197,9 @@ class SettingsScreen extends ConsumerWidget {
                     return GestureDetector(
                       onTap: () =>
                           ref.read(settingsProvider.notifier).setAiModel(id),
+                      behavior: HitTestBehavior.opaque,
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
                         child: Row(
                           children: [
                             Container(
@@ -213,13 +209,13 @@ class SettingsScreen extends ConsumerWidget {
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: selected
-                                      ? AccentPreset.volt.primary
+                                      ? accent.primary
                                       : const Color.fromRGBO(
                                           255, 255, 255, 0.2),
                                   width: 1.5,
                                 ),
                                 color: selected
-                                    ? AccentPreset.volt.primary
+                                    ? accent.primary
                                     : Colors.transparent,
                               ),
                               child: selected
@@ -273,15 +269,19 @@ class SettingsScreen extends ConsumerWidget {
                         ref.read(authProvider.notifier).clearKey();
                         context.go('/auth');
                       },
-                      child: const Row(
-                        children: [
-                          Text('Disconnect',
-                              style: TextStyle(
-                                  color: Color(0xFFFF6B6B), fontSize: 15)),
-                          Spacer(),
-                          Icon(Icons.logout_rounded,
-                              color: Color(0xFFFF6B6B), size: 18),
-                        ],
+                      behavior: HitTestBehavior.opaque,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Text('Disconnect',
+                                style: TextStyle(
+                                    color: Color(0xFFFF6B6B), fontSize: 15)),
+                            Spacer(),
+                            Icon(Icons.logout_rounded,
+                                color: Color(0xFFFF6B6B), size: 18),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -307,15 +307,19 @@ class SettingsScreen extends ConsumerWidget {
                         Uri.parse('https://andij71.github.io/VO2.ai/privacy/'),
                         mode: LaunchMode.inAppBrowserView,
                       ),
-                      child: const Row(
-                        children: [
-                          Text('Privacy Policy',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 15)),
-                          Spacer(),
-                          Icon(Icons.arrow_outward_rounded,
-                              color: PaceColors.textTertiary, size: 18),
-                        ],
+                      behavior: HitTestBehavior.opaque,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Text('Privacy Policy',
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 15)),
+                            Spacer(),
+                            Icon(Icons.arrow_outward_rounded,
+                                color: PaceColors.textTertiary, size: 18),
+                          ],
+                        ),
                       ),
                     ),
                     const Divider(
@@ -325,15 +329,19 @@ class SettingsScreen extends ConsumerWidget {
                         Uri.parse('https://github.com/andij71/VO2.ai'),
                         mode: LaunchMode.inAppBrowserView,
                       ),
-                      child: const Row(
-                        children: [
-                          Text('Open Source on GitHub',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 15)),
-                          Spacer(),
-                          Icon(Icons.arrow_outward_rounded,
-                              color: PaceColors.textTertiary, size: 18),
-                        ],
+                      behavior: HitTestBehavior.opaque,
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 6),
+                        child: Row(
+                          children: [
+                            Text('Open Source on GitHub',
+                                style:
+                                    TextStyle(color: Colors.white, fontSize: 15)),
+                            Spacer(),
+                            Icon(Icons.arrow_outward_rounded,
+                                color: PaceColors.textTertiary, size: 18),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -354,6 +362,7 @@ class SettingsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 child: GestureDetector(
                   onTap: () => showDeleteAccountSheet(context),
+                  behavior: HitTestBehavior.opaque,
                   child: const Row(
                     children: [
                       Expanded(
@@ -467,8 +476,12 @@ class SettingsScreen extends ConsumerWidget {
         strava.state == StravaState.ready) {
       return GestureDetector(
         onTap: () => ref.read(stravaProvider.notifier).disconnect(),
-        child: const Text('Disconnect',
-            style: TextStyle(fontSize: 13, color: Color(0xFFFF6B6B))),
+        behavior: HitTestBehavior.opaque,
+        child: const Padding(
+          padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Text('Disconnect',
+              style: TextStyle(fontSize: 13, color: Color(0xFFFF6B6B))),
+        ),
       );
     }
 
@@ -476,6 +489,7 @@ class SettingsScreen extends ConsumerWidget {
       onTap: () async {
         await ref.read(stravaProvider.notifier).authenticate();
       },
+      behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
@@ -506,16 +520,20 @@ class SettingsScreen extends ConsumerWidget {
   Widget _colorDot(Color color, bool selected, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        width: 28,
-        height: 28,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: color,
-          border: selected ? Border.all(color: Colors.white, width: 2) : null,
-          boxShadow: selected
-              ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8)]
-              : null,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: color,
+            border: selected ? Border.all(color: Colors.white, width: 2) : null,
+            boxShadow: selected
+                ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8)]
+                : null,
+          ),
         ),
       ),
     );

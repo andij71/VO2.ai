@@ -3,9 +3,9 @@
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:app/data/database.dart';
-import 'package:app/models/plan_day.dart';
-import 'package:app/providers/plan_provider.dart';
+import 'package:vo2_ai/data/database.dart';
+import 'package:vo2_ai/models/plan_day.dart';
+import 'package:vo2_ai/providers/plan_provider.dart';
 
 void main() {
   late AppDatabase db;

@@ -59,8 +59,11 @@ You can include multiple actions in the array. Always explain what you're changi
     String? stravaContext,
   }) {
     final goalName = _goalNames[goal] ?? goal;
+    final now = DateTime.now();
+    final weekday = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][now.weekday - 1];
     final buffer = StringBuffer();
     buffer.writeln('Runner context:');
+    buffer.writeln('- Today: $weekday, ${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}');
     buffer.writeln('- Goal: $goalName');
     buffer.writeln('- Level: $level');
     buffer.writeln('- Progress: Week $currentWeek of $totalWeeks');
@@ -180,7 +183,8 @@ You can include multiple actions in the array. Always explain what you're changi
       buf.writeln('Week ${entry.key}:');
       for (final d in entry.value) {
         final day = d as dynamic;
-        final name = dayNames[day.dayOfWeek as int];
+        final dow = (day.dayOfWeek as int).clamp(0, 6);
+        final name = dayNames[dow];
         buf.writeln('  $name: ${day.sessionType} - ${day.label} (${day.distanceKm}km @ ${day.targetPace}/km)');
       }
     }

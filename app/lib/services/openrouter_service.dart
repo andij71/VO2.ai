@@ -107,8 +107,12 @@ class OpenRouterService {
   Future<bool> validateKey() async {
     debugPrint('[OpenRouter] Validating API key...');
     try {
-      final response = await _dio.get('/models');
-      final valid = response.statusCode == 200;
+      final response = await _dio.get('/auth/key');
+      final data = response.data;
+      // /auth/key returns { "data": { "label": "...", ... } } for valid keys
+      final valid = response.statusCode == 200 &&
+          data is Map &&
+          data['data'] is Map;
       debugPrint('[OpenRouter] Key validation: ${valid ? 'OK' : 'FAILED'} (status: ${response.statusCode})');
       return valid;
     } on DioException catch (e) {
