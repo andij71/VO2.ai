@@ -1,5 +1,7 @@
 // lib/providers/plan_provider.dart
 
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,7 +15,13 @@ import 'database_provider.dart';
 import 'settings_provider.dart';
 import 'strava_provider.dart';
 
-enum PlanState { idle, generating, ready, error }
+enum PlanState { idle, generating, ready, error, checkingFeasibility, feasibilityWarning }
+
+class FeasibilityResult {
+  final bool feasible;
+  final String message;
+  const FeasibilityResult({required this.feasible, required this.message});
+}
 
 class PlanStatus {
   final PlanState state;
@@ -21,9 +29,10 @@ class PlanStatus {
   final int? planId;
   final List<PlanDay>? days;
   final DateTime? startDate;
+  final FeasibilityResult? feasibility;
 
   const PlanStatus(
-      {this.state = PlanState.idle, this.errorMessage, this.planId, this.days, this.startDate});
+      {this.state = PlanState.idle, this.errorMessage, this.planId, this.days, this.startDate, this.feasibility});
 }
 
 Future<int> savePlanToDb(
@@ -82,6 +91,70 @@ class PlanNotifier extends StateNotifier<PlanStatus> {
   OpenRouterService? get _ai => _ref.read(authProvider.notifier).service;
   UserSetup get _setup => _ref.read(settingsProvider);
   String get _stravaContext => StravaService.summarizeForAI(_ref.read(stravaProvider).activities);
+
+  /// Check if the selected goal is realistic based on Strava data.
+  /// Returns null if no Strava data or if feasible. Shows warning state if not.
+  Future<FeasibilityResult?> checkFeasibility() async {
+    if (_ai == null || !_setup.isComplete) return null;
+
+    final stravaContext = _stravaContext;
+    if (stravaContext.isEmpty) return null; // No Strava data, skip check
+
+    state = const PlanStatus(state: PlanState.checkingFeasibility);
+
+    try {
+      final prompt = PlanGeneratorService.buildFeasibilityPrompt(
+        goal: _setup.goal!,
+        level: _setup.level!,
+        daysPerWeek: _setup.daysPerWeek,
+        stravaContext: stravaContext,
+      );
+
+      final response = await _ai!.sendMessage(
+        messages: [
+          {'role': 'system', 'content': prompt},
+          {'role': 'user', 'content': 'Assess my goal feasibility.'},
+        ],
+        model: _setup.aiModel,
+      );
+
+      // Parse JSON response
+      var cleaned = response.trim();
+      if (cleaned.startsWith('```')) {
+        cleaned = cleaned
+            .replaceFirst(RegExp(r'^```\w*\n?'), '')
+            .replaceFirst(RegExp(r'\n?```\s*$'), '');
+      }
+
+      final decoded = jsonDecode(cleaned) as Map<String, dynamic>;
+      final result = FeasibilityResult(
+        feasible: decoded['feasible'] as bool? ?? true,
+        message: decoded['message'] as String? ?? '',
+      );
+
+      if (!result.feasible) {
+        if (!mounted) return null;
+        state = PlanStatus(state: PlanState.feasibilityWarning, feasibility: result);
+        return result;
+      }
+
+      // Feasible — reset to idle so generatePlan can proceed
+      if (!mounted) return null;
+      state = const PlanStatus(state: PlanState.idle);
+      return result;
+    } catch (e) {
+      debugPrint('[PlanProvider] Feasibility check failed: $e');
+      // On error, skip the check and let user proceed
+      if (!mounted) return null;
+      state = const PlanStatus(state: PlanState.idle);
+      return null;
+    }
+  }
+
+  /// Dismiss feasibility warning and allow plan generation
+  void dismissFeasibilityWarning() {
+    state = const PlanStatus(state: PlanState.idle);
+  }
 
   Future<void> generatePlan() async {
     if (_ai == null) {
@@ -149,8 +222,9 @@ class PlanNotifier extends StateNotifier<PlanStatus> {
       );
 
       debugPrint('[PlanProvider] Got response, parsing JSON...');
-      final days = PlanGeneratorService.parsePlanJson(response);
-      debugPrint('[PlanProvider] Parsed ${days.length} days');
+      var days = PlanGeneratorService.parsePlanJson(response);
+      days = PlanGeneratorService.cleanupDays(days, runningDays: _setup.runningDays);
+      debugPrint('[PlanProvider] Parsed ${days.length} days (after cleanup)');
       final totalWeeks = PlanGeneratorService.weeksForGoal(_setup.goal!);
 
       // Save to DB (userId=1 for MVP single user)

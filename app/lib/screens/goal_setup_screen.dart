@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants.dart';
+import '../providers/plan_provider.dart';
 import '../providers/settings_provider.dart';
 import '../providers/strava_provider.dart';
 import '../widgets/glass_card.dart';
@@ -18,13 +19,35 @@ class GoalSetupScreen extends ConsumerStatefulWidget {
 
 class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
   int _step = 0; // 0=goal, 1=level, 2=training details, 3=strava
+  bool _checkingFeasibility = false;
 
   static const _goals = [
+    {
+      'id': 'c25k',
+      'label': 'Couch to 5K',
+      'icon': '\uD83C\uDF31',
+      'desc': 'Start running from zero',
+      'time': '8 weeks'
+    },
+    {
+      'id': 'first5k',
+      'label': 'First 5K',
+      'icon': '\uD83C\uDFAF',
+      'desc': 'Complete your first 5 km',
+      'time': '6 weeks'
+    },
     {
       'id': 'sub20',
       'label': 'Sub-20 5K',
       'icon': '\u26A1',
       'desc': 'Break 4:00/km pace',
+      'time': '8 weeks'
+    },
+    {
+      'id': '10k',
+      'label': '10K',
+      'icon': '\uD83D\uDCAA',
+      'desc': 'Complete or PR 10 km',
       'time': '8 weeks'
     },
     {
@@ -360,7 +383,12 @@ class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
                       width: 0.5,
                     ),
                     boxShadow: selected
-                        ? [BoxShadow(color: accent.glow, blurRadius: 16, spreadRadius: -4)]
+                        ? [
+                            BoxShadow(
+                                color: accent.glow,
+                                blurRadius: 16,
+                                spreadRadius: -4)
+                          ]
                         : null,
                   ),
                   alignment: Alignment.center,
@@ -485,7 +513,8 @@ class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
 
         // Pro session names toggle
         GestureDetector(
-          onTap: () => ref.read(settingsProvider.notifier).setProNames(!setup.proNames),
+          onTap: () =>
+              ref.read(settingsProvider.notifier).setProNames(!setup.proNames),
           child: GlassCard(
             glow: setup.proNames,
             glowColor: accent.glow,
@@ -494,22 +523,36 @@ class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
               child: Row(
                 children: [
                   Container(
-                    width: 40, height: 40,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(12),
-                      color: setup.proNames ? accent.dim : const Color.fromRGBO(255, 255, 255, 0.06),
+                      color: setup.proNames
+                          ? accent.dim
+                          : const Color.fromRGBO(255, 255, 255, 0.06),
                     ),
                     alignment: Alignment.center,
-                    child: Icon(Icons.bolt_rounded, size: 22, color: setup.proNames ? accent.primary : PaceColors.textMuted),
+                    child: Icon(Icons.bolt_rounded,
+                        size: 22,
+                        color: setup.proNames
+                            ? accent.primary
+                            : PaceColors.textMuted),
                   ),
                   const SizedBox(width: 14),
                   const Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Pro Session Names', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                        Text('Pro Session Names',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white)),
                         SizedBox(height: 2),
-                        Text('Viby names like "Threshold Surge" instead of "Tempo Run"', style: TextStyle(fontSize: 12, color: PaceColors.textSecondary)),
+                        Text(
+                            'Viby names like "Threshold Surge" instead of "Tempo Run"',
+                            style: TextStyle(
+                                fontSize: 12, color: PaceColors.textSecondary)),
                       ],
                     ),
                   ),
@@ -733,10 +776,13 @@ class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
             Expanded(
               flex: 2,
               child: PaceButton(
-                label: strava.state == StravaState.ready
-                    ? 'Generate Plan'
-                    : 'Skip for now',
-                onPressed: () => context.go('/plan'),
+                label: _checkingFeasibility
+                    ? 'Analyzing...'
+                    : strava.state == StravaState.ready
+                        ? 'Generate Plan'
+                        : 'Skip for now',
+                enabled: !_checkingFeasibility,
+                onPressed: () => _onGeneratePlan(strava),
               ),
             ),
           ],
@@ -793,6 +839,109 @@ class _GoalSetupScreenState extends ConsumerState<GoalSetupScreen> {
           'Connect',
           style: TextStyle(
               fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onGeneratePlan(StravaStatus strava) async {
+    // If no Strava data, go straight to plan generation
+    if (strava.state != StravaState.ready || strava.activities.isEmpty) {
+      context.go('/plan');
+      return;
+    }
+
+    // Check feasibility with Strava data
+    setState(() => _checkingFeasibility = true);
+    try {
+      final result = await ref.read(planProvider.notifier).checkFeasibility();
+
+      if (!mounted) return;
+      setState(() => _checkingFeasibility = false);
+
+      if (result != null && !result.feasible) {
+        // Show warning dialog
+        final proceed = await _showFeasibilityDialog(result);
+        if (proceed == true && mounted) {
+          ref.read(planProvider.notifier).dismissFeasibilityWarning();
+          context.go('/plan');
+        }
+      } else {
+        // Feasible or check failed — proceed
+        context.go('/plan');
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _checkingFeasibility = false);
+      context.go('/plan');
+    }
+  }
+
+  Future<bool?> _showFeasibilityDialog(FeasibilityResult result) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: const Color(0xFF161618),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFFF8C42).withValues(alpha: 0.15),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(Icons.warning_amber_rounded,
+                    size: 28, color: Color(0xFFFF8C42)),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'Warning',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                result.message,
+                style: const TextStyle(
+                    fontSize: 14, color: PaceColors.textSecondary, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              PaceButton(
+                label: 'Plan anyway',
+                color: const Color(0xFFFF8C42),
+                onPressed: () => Navigator.of(ctx).pop(true),
+              ),
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => Navigator.of(ctx).pop(false),
+                child: Container(
+                  width: double.infinity,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(PaceRadii.button),
+                    color: const Color.fromRGBO(255, 255, 255, 0.07),
+                    border: Border.all(
+                        color: const Color.fromRGBO(255, 255, 255, 0.12)),
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text('Adjust goal',
+                      style: TextStyle(
+                          color: PaceColors.textSecondary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

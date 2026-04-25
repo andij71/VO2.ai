@@ -1,8 +1,10 @@
 // lib/screens/chat_screen.dart
 
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/constants.dart';
 import '../data/database.dart' hide ChatMessage;
@@ -20,6 +22,8 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
+  Timer? _staleTimer;
+  bool _showStaleReplies = false;
 
   @override
   void initState() {
@@ -27,14 +31,28 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     Future.microtask(() async {
       await ref.read(chatProvider.notifier).loadMessages();
       SchedulerBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+      _startStaleTimer();
     });
   }
 
   @override
   void dispose() {
+    _staleTimer?.cancel();
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _startStaleTimer() {
+    _staleTimer?.cancel();
+    _staleTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      final messages = ref.read(chatProvider);
+      final stale = _isConversationStale(messages);
+      print(stale);
+      if (stale != _showStaleReplies) {
+        setState(() => _showStaleReplies = stale);
+      }
+    });
   }
 
   void _send([String? text]) {
@@ -45,6 +63,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref.read(chatProvider.notifier).sendMessage(msg, pinnedDay: pinned);
     // Clear pinned day after sending
     ref.read(chatPinnedDayProvider.notifier).state = null;
+    setState(() => _showStaleReplies = false);
+    _startStaleTimer();
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);
   }
 
@@ -67,6 +87,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         },
       ),
     );
+  }
+
+  bool _isConversationStale(List<ChatMessage> messages) {
+    if (messages.isEmpty) return false;
+    final last = messages.last;
+    print(last.createdAt);
+    if (last.createdAt == null) return false;
+    return DateTime.now().difference(last.createdAt!) >
+        const Duration(minutes: 1);
   }
 
   void _scrollToBottom() {
@@ -98,17 +127,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ? _buildEmptyState(accent)
                 : ListView.builder(
                     controller: _scrollController,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    itemCount: messages.length + (messages.length < 3 ? 1 : 0),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    itemCount: messages.length + (_showStaleReplies ? 1 : 0),
                     itemBuilder: (context, i) {
-                      // Show quick replies after last message if few messages
-                      if (i == messages.length && messages.length < 3) {
+                      if (i == messages.length) {
                         return _QuickReplies(
-                          accent: accent,
-                          onTap: (text) => _send(text),
-                        );
+                            accent: accent, onTap: (text) => _send(text));
                       }
-                      return _buildMessage(messages[i], accent, i);
+                      final isLast = i == messages.length - 1;
+                      return _buildMessage(messages[i], accent, i,
+                          isLast: isLast);
                     },
                   ),
           ),
@@ -134,12 +163,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               colors: [accent.primary, const Color(0xFF8B9EFF)],
             ),
           ),
-          child: const Icon(Icons.auto_awesome_rounded, size: 28, color: Color(0xFF0A0A0C)),
+          child: const Icon(Icons.auto_awesome_rounded,
+              size: 28, color: Color(0xFF0A0A0C)),
         ),
         const SizedBox(height: 16),
-        const Text('Coach Aria', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white)),
+        const Text('Coach Aria',
+            style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: Colors.white)),
         const SizedBox(height: 6),
-        const Text('Ask me anything about your training', style: TextStyle(fontSize: 14, color: PaceColors.textSecondary)),
+        const Text('Ask me anything about your training',
+            style: TextStyle(fontSize: 14, color: PaceColors.textSecondary)),
         const SizedBox(height: 24),
         _QuickReplies(
           accent: accent,
@@ -149,7 +184,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildMessage(ChatMessage msg, AccentPreset accent, int index) {
+  Widget _buildMessage(ChatMessage msg, AccentPreset accent, int index,
+      {bool isLast = false}) {
     final isUser = msg.role == 'user';
 
     if (msg.isLoading) {
@@ -186,7 +222,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 12),
         child: Row(
-          mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment:
+              isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!isUser) ...[
@@ -195,9 +232,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ],
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isUser ? accent.dim : const Color.fromRGBO(255, 255, 255, 0.05),
+                  color: isUser
+                      ? accent.dim
+                      : const Color.fromRGBO(255, 255, 255, 0.05),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
@@ -205,24 +245,102 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     bottomRight: Radius.circular(isUser ? 6 : 18),
                   ),
                   border: isUser
-                      ? Border.all(color: accent.primary.withValues(alpha: 0.25), width: 0.5)
+                      ? Border.all(
+                          color: accent.primary.withValues(alpha: 0.25),
+                          width: 0.5)
                       : null,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      msg.content,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: isUser ? Colors.white : const Color.fromRGBO(255, 255, 255, 0.85),
-                        height: 1.45,
-                      ),
-                    ),
+                    isUser
+                        ? Text(
+                            msg.content,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              color: Colors.white,
+                              height: 1.45,
+                            ),
+                          )
+                        : MarkdownBody(
+                            data: msg.content,
+                            styleSheet: MarkdownStyleSheet(
+                              p: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color.fromRGBO(255, 255, 255, 0.85),
+                                  height: 1.45),
+                              strong: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                              em: const TextStyle(
+                                  fontSize: 15,
+                                  fontStyle: FontStyle.italic,
+                                  color: Color.fromRGBO(255, 255, 255, 0.85)),
+                              h1: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: accent.primary),
+                              h2: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                  color: accent.primary),
+                              h3: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white),
+                              listBullet: const TextStyle(
+                                  fontSize: 15,
+                                  color: Color.fromRGBO(255, 255, 255, 0.85)),
+                              code: TextStyle(
+                                  fontSize: 13,
+                                  color: accent.primary,
+                                  backgroundColor: const Color.fromRGBO(
+                                      255, 255, 255, 0.06)),
+                              codeblockDecoration: BoxDecoration(
+                                color:
+                                    const Color.fromRGBO(255, 255, 255, 0.06),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              blockSpacing: 8,
+                            ),
+                            shrinkWrap: true,
+                          ),
                     if (msg.hasPlanChange && msg.planActions.isNotEmpty) ...[
                       const SizedBox(height: 10),
                       _PlanChangeCard(actions: msg.planActions, accent: accent),
+                    ],
+                    if (!isUser && msg.options.isNotEmpty && isLast && !_showStaleReplies) ...[
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: msg.options
+                            .map((opt) => GestureDetector(
+                                  onTap: () => _send(opt),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 7),
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.circular(PaceRadii.pill),
+                                      color: accent.dim,
+                                      border: Border.all(
+                                          color: accent.primary
+                                              .withValues(alpha: 0.2)),
+                                    ),
+                                    child: Text(
+                                      opt,
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: accent.primary,
+                                          fontWeight: FontWeight.w500),
+                                    ),
+                                  ),
+                                ))
+                            .toList(),
+                      ),
                     ],
                   ],
                 ),
@@ -242,7 +360,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
           decoration: const BoxDecoration(
             color: Color.fromRGBO(255, 255, 255, 0.03),
-            border: Border(top: BorderSide(color: Color.fromRGBO(255, 255, 255, 0.08))),
+            border: Border(
+                top: BorderSide(color: Color.fromRGBO(255, 255, 255, 0.08))),
           ),
           child: Row(
             children: [
@@ -254,9 +373,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: const Color.fromRGBO(255, 255, 255, 0.06),
-                    border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.1)),
+                    border: Border.all(
+                        color: const Color.fromRGBO(255, 255, 255, 0.1)),
                   ),
-                  child: const Icon(Icons.calendar_today_rounded, color: PaceColors.textSecondary, size: 17),
+                  child: const Icon(Icons.calendar_today_rounded,
+                      color: PaceColors.textSecondary, size: 17),
                 ),
               ),
               const SizedBox(width: 8),
@@ -266,7 +387,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   decoration: BoxDecoration(
                     color: const Color.fromRGBO(255, 255, 255, 0.06),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: const Color.fromRGBO(255, 255, 255, 0.1)),
+                    border: Border.all(
+                        color: const Color.fromRGBO(255, 255, 255, 0.1)),
                   ),
                   child: TextField(
                     controller: _controller,
@@ -292,7 +414,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     color: accent.primary,
                     boxShadow: [BoxShadow(color: accent.glow, blurRadius: 12)],
                   ),
-                  child: const Icon(Icons.arrow_upward_rounded, color: Color(0xFF0A0A0C), size: 20),
+                  child: const Icon(Icons.arrow_upward_rounded,
+                      color: Color(0xFF0A0A0C), size: 20),
                 ),
               ),
             ],
@@ -322,7 +445,11 @@ class _CoachHeader extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Coach Aria', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+                const Text('Coach Aria',
+                    style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
                 Row(
                   children: [
                     Container(
@@ -331,11 +458,17 @@ class _CoachHeader extends ConsumerWidget {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: PaceColors.easy,
-                        boxShadow: [BoxShadow(color: PaceColors.easy.withValues(alpha: 0.5), blurRadius: 4)],
+                        boxShadow: [
+                          BoxShadow(
+                              color: PaceColors.easy.withValues(alpha: 0.5),
+                              blurRadius: 4)
+                        ],
                       ),
                     ),
                     const SizedBox(width: 5),
-                    const Text('Online', style: TextStyle(fontSize: 12, color: PaceColors.textSecondary)),
+                    const Text('Online',
+                        style: TextStyle(
+                            fontSize: 12, color: PaceColors.textSecondary)),
                   ],
                 ),
               ],
@@ -350,7 +483,8 @@ class _CoachHeader extends ConsumerWidget {
                   shape: BoxShape.circle,
                   color: const Color.fromRGBO(255, 255, 255, 0.06),
                 ),
-                child: const Icon(Icons.delete_outline_rounded, size: 18, color: PaceColors.textSecondary),
+                child: const Icon(Icons.delete_outline_rounded,
+                    size: 18, color: PaceColors.textSecondary),
               ),
             ),
         ],
@@ -378,7 +512,8 @@ class _CoachAvatar extends StatelessWidget {
           colors: [accent.primary, const Color(0xFF8B9EFF)],
         ),
       ),
-      child: Icon(Icons.auto_awesome_rounded, size: size * 0.45, color: const Color(0xFF0A0A0C)),
+      child: Icon(Icons.auto_awesome_rounded,
+          size: size * 0.45, color: const Color(0xFF0A0A0C)),
     );
   }
 }
@@ -392,14 +527,16 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin {
+class _TypingDotsState extends State<_TypingDots>
+    with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
 
   @override
   void initState() {
     super.initState();
     _controllers = List.generate(3, (i) {
-      final c = AnimationController(vsync: this, duration: const Duration(milliseconds: 600));
+      final c = AnimationController(
+          vsync: this, duration: const Duration(milliseconds: 600));
       Future.delayed(Duration(milliseconds: i * 200), () {
         if (mounted) c.repeat(reverse: true);
       });
@@ -429,7 +566,8 @@ class _TypingDotsState extends State<_TypingDots> with TickerProviderStateMixin 
               height: 7,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: PaceColors.textSecondary.withValues(alpha: 0.3 + (_controllers[i].value * 0.7)),
+                color: PaceColors.textSecondary
+                    .withValues(alpha: 0.3 + (_controllers[i].value * 0.7)),
               ),
             );
           },
@@ -452,7 +590,8 @@ class _PlanChangeCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         color: accent.primary.withValues(alpha: 0.08),
-        border: Border.all(color: accent.primary.withValues(alpha: 0.2), width: 0.5),
+        border: Border.all(
+            color: accent.primary.withValues(alpha: 0.2), width: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -460,37 +599,43 @@ class _PlanChangeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.edit_calendar_rounded, size: 14, color: accent.primary),
+              Icon(Icons.edit_calendar_rounded,
+                  size: 14, color: accent.primary),
               const SizedBox(width: 6),
               Text(
                 'Plan Updated',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: accent.primary),
+                style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: accent.primary),
               ),
             ],
           ),
           const SizedBox(height: 6),
           ...actions.map((a) => Padding(
-            padding: const EdgeInsets.only(bottom: 3),
-            child: Row(
-              children: [
-                Text(a.icon, style: const TextStyle(fontSize: 12)),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    a.description,
-                    style: const TextStyle(fontSize: 12, color: Color.fromRGBO(255, 255, 255, 0.7)),
-                  ),
+                padding: const EdgeInsets.only(bottom: 3),
+                child: Row(
+                  children: [
+                    Text(a.icon, style: const TextStyle(fontSize: 12)),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        a.description,
+                        style: const TextStyle(
+                            fontSize: 12,
+                            color: Color.fromRGBO(255, 255, 255, 0.7)),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          )),
+              )),
         ],
       ),
     );
   }
 }
 
-// Quick reply suggestion chips
+// Quick reply suggestion chips for empty state
 class _QuickReplies extends StatelessWidget {
   final AccentPreset accent;
   final ValueChanged<String> onTap;
@@ -498,9 +643,9 @@ class _QuickReplies extends StatelessWidget {
   const _QuickReplies({required this.accent, required this.onTap});
 
   static const _suggestions = [
-    'How do I improve my pace?',
-    'Make Tuesday a rest day',
-    'Swap my long run to Sunday',
+    "What's today's session?",
+    'How should I warm up?',
+    'Adjust my plan this week',
   ];
 
   @override
@@ -519,11 +664,15 @@ class _QuickReplies extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(PaceRadii.pill),
                 color: accent.dim,
-                border: Border.all(color: accent.primary.withValues(alpha: 0.2)),
+                border:
+                    Border.all(color: accent.primary.withValues(alpha: 0.2)),
               ),
               child: Text(
                 text,
-                style: TextStyle(fontSize: 13, color: accent.primary, fontWeight: FontWeight.w500),
+                style: TextStyle(
+                    fontSize: 13,
+                    color: accent.primary,
+                    fontWeight: FontWeight.w500),
               ),
             ),
           );
@@ -552,7 +701,8 @@ class _PinnedDayBanner extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: const BoxDecoration(
-        border: Border(top: BorderSide(color: Color.fromRGBO(255, 255, 255, 0.08))),
+        border:
+            Border(top: BorderSide(color: Color.fromRGBO(255, 255, 255, 0.08))),
       ),
       child: Row(
         children: [
@@ -561,13 +711,17 @@ class _PinnedDayBanner extends ConsumerWidget {
           Expanded(
             child: Text(
               'W${pinned.week} $dayName — ${pinned.label}',
-              style: TextStyle(fontSize: 13, color: accent.primary, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                  fontSize: 13,
+                  color: accent.primary,
+                  fontWeight: FontWeight.w600),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           GestureDetector(
             onTap: () => ref.read(chatPinnedDayProvider.notifier).state = null,
-            child: const Icon(Icons.close_rounded, size: 16, color: PaceColors.textSecondary),
+            child: const Icon(Icons.close_rounded,
+                size: 16, color: PaceColors.textSecondary),
           ),
         ],
       ),
@@ -581,7 +735,8 @@ class _DayPickerSheet extends StatelessWidget {
   final AccentPreset accent;
   final ValueChanged<PlanDay> onSelect;
 
-  const _DayPickerSheet({required this.days, required this.accent, required this.onSelect});
+  const _DayPickerSheet(
+      {required this.days, required this.accent, required this.onSelect});
 
   static const _dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -618,11 +773,15 @@ class _DayPickerSheet extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Row(
                 children: [
-                  Icon(Icons.calendar_today_rounded, size: 16, color: accent.primary),
+                  Icon(Icons.calendar_today_rounded,
+                      size: 16, color: accent.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Pin a training day',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: accent.primary),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: accent.primary),
                   ),
                 ],
               ),
@@ -635,15 +794,20 @@ class _DayPickerSheet extends StatelessWidget {
                 itemCount: sortedWeeks.length,
                 itemBuilder: (context, wi) {
                   final week = sortedWeeks[wi];
-                  final weekDays = weeks[week]!..sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
+                  final weekDays = weeks[week]!
+                    ..sort((a, b) => a.dayOfWeek.compareTo(b.dayOfWeek));
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: const EdgeInsets.only(left: 4, top: 12, bottom: 6),
+                        padding:
+                            const EdgeInsets.only(left: 4, top: 12, bottom: 6),
                         child: Text(
                           'Week $week',
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: PaceColors.textSecondary),
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: PaceColors.textSecondary),
                         ),
                       ),
                       ...weekDays.map((day) {
@@ -655,7 +819,8 @@ class _DayPickerSheet extends StatelessWidget {
                           onTap: () => onSelect(day),
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 4),
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
                             decoration: BoxDecoration(
                               color: const Color.fromRGBO(255, 255, 255, 0.04),
                               borderRadius: BorderRadius.circular(12),
@@ -669,7 +834,9 @@ class _DayPickerSheet extends StatelessWidget {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w600,
-                                      color: isRest ? PaceColors.textMuted : Colors.white,
+                                      color: isRest
+                                          ? PaceColors.textMuted
+                                          : Colors.white,
                                     ),
                                   ),
                                 ),
@@ -679,14 +846,19 @@ class _DayPickerSheet extends StatelessWidget {
                                     day.label,
                                     style: TextStyle(
                                       fontSize: 14,
-                                      color: isRest ? PaceColors.textMuted : const Color.fromRGBO(255, 255, 255, 0.8),
+                                      color: isRest
+                                          ? PaceColors.textMuted
+                                          : const Color.fromRGBO(
+                                              255, 255, 255, 0.8),
                                     ),
                                   ),
                                 ),
                                 if (!isRest) ...[
                                   Text(
                                     '${day.distanceKm}km',
-                                    style: const TextStyle(fontSize: 12, color: PaceColors.textSecondary),
+                                    style: const TextStyle(
+                                        fontSize: 12,
+                                        color: PaceColors.textSecondary),
                                   ),
                                 ],
                               ],

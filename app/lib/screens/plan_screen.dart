@@ -6,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../core/constants.dart';
 import '../data/database.dart';
-import '../providers/chat_provider.dart' show chatProvider, chatPinnedDayProvider;
+import '../providers/chat_provider.dart'
+    show chatProvider, chatPinnedDayProvider;
 import '../providers/plan_provider.dart';
 import '../providers/settings_provider.dart'
     show settingsProvider, accentProvider;
@@ -26,12 +27,33 @@ class PlanScreen extends ConsumerStatefulWidget {
 }
 
 class _PlanScreenState extends ConsumerState<PlanScreen> {
+  int _retryCount = 0;
+  static const _maxRetries = 3;
+
   @override
   void initState() {
     super.initState();
     final plan = ref.read(planProvider);
     if (plan.state == PlanState.idle) {
-      Future.microtask(() => ref.read(planProvider.notifier).generatePlan());
+      Future.microtask(() => _generateWithRetry());
+    }
+  }
+
+  Future<void> _generateWithRetry() async {
+    _retryCount = 0;
+    await _tryGenerate();
+  }
+
+  Future<void> _tryGenerate() async {
+    await ref.read(planProvider.notifier).generatePlan();
+    final plan = ref.read(planProvider);
+    if (plan.state == PlanState.error && _retryCount < _maxRetries) {
+      _retryCount++;
+      debugPrint('[PlanScreen] Auto-retry $_retryCount/$_maxRetries');
+      if (mounted) {
+        await Future.delayed(Duration(seconds: _retryCount)); // backoff
+        if (mounted) await _tryGenerate();
+      }
     }
   }
 
@@ -42,38 +64,89 @@ class _PlanScreenState extends ConsumerState<PlanScreen> {
 
     return SafeArea(
       child: switch (plan.state) {
-        PlanState.idle || PlanState.generating => _LoadingView(accent: accent),
+        PlanState.idle ||
+        PlanState.generating ||
+        PlanState.checkingFeasibility ||
+        PlanState.feasibilityWarning =>
+          _LoadingView(accent: accent),
         PlanState.ready => _PlanView(
             days: plan.days!, accent: accent, startDate: plan.startDate),
-        PlanState.error => _buildError(plan.errorMessage ?? 'Unknown error'),
+        PlanState.error =>
+          _buildError(plan.errorMessage ?? 'Unknown error', accent),
       },
     );
   }
 
-  Widget _buildError(String message) {
+  Widget _buildError(String message, AccentPreset accent) {
+    // Try to extract a user-friendly message
+    final friendlyMessage = message.contains('OpenRouterException')
+        ? message.replaceFirst(RegExp(r'OpenRouterException:\s*'), '')
+        : message.contains('PlanParseException')
+            ? 'The AI returned an invalid training plan. Please try again.'
+            : message;
+
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                size: 48, color: PaceColors.textMuted),
-            const SizedBox(height: 16),
-            const Text('Something went wrong',
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFFF6B6B).withValues(alpha: 0.12),
+              ),
+              alignment: Alignment.center,
+              child: const Icon(Icons.cloud_off_rounded,
+                  size: 30, color: Color(0xFFFF6B6B)),
+            ),
+            const SizedBox(height: 20),
+            const Text('Plan konnte nicht erstellt werden',
                 style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white)),
-            const SizedBox(height: 8),
-            Text(message,
-                style: const TextStyle(
-                    fontSize: 13, color: PaceColors.textSecondary),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white),
                 textAlign: TextAlign.center),
-            const SizedBox(height: 24),
-            TextButton(
-              onPressed: () => ref.read(planProvider.notifier).generatePlan(),
-              child: const Text('Try Again'),
+            const SizedBox(height: 10),
+            Text(friendlyMessage,
+                style: const TextStyle(
+                    fontSize: 14, color: PaceColors.textSecondary, height: 1.5),
+                textAlign: TextAlign.center),
+            if (_retryCount >= _maxRetries)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  '$_maxRetries automatische Versuche fehlgeschlagen',
+                  style: const TextStyle(
+                      fontSize: 12, color: PaceColors.textMuted),
+                ),
+              ),
+            const SizedBox(height: 28),
+            PaceButton(
+              label: 'Erneut versuchen',
+              onPressed: () => _generateWithRetry(),
+            ),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => context.go('/setup'),
+              child: Container(
+                width: double.infinity,
+                height: 50,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(PaceRadii.button),
+                  color: const Color.fromRGBO(255, 255, 255, 0.07),
+                  border: Border.all(
+                      color: const Color.fromRGBO(255, 255, 255, 0.12)),
+                ),
+                alignment: Alignment.center,
+                child: const Text('Einstellungen anpassen',
+                    style: TextStyle(
+                        color: PaceColors.textSecondary,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600)),
+              ),
             ),
           ],
         ),
@@ -141,7 +214,7 @@ class _LoadingViewState extends State<_LoadingView> {
 }
 
 // Plan view with stat cards and animated day rows
-class _PlanView extends ConsumerWidget {
+class _PlanView extends ConsumerStatefulWidget {
   final List<PlanDay> days;
   final AccentPreset accent;
   final DateTime? startDate;
@@ -149,7 +222,17 @@ class _PlanView extends ConsumerWidget {
   const _PlanView({required this.days, required this.accent, this.startDate});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PlanView> createState() => _PlanViewState();
+}
+
+class _PlanViewState extends ConsumerState<_PlanView> {
+  bool _hideRestDays = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final days = widget.days;
+    final accent = widget.accent;
+    final startDate = widget.startDate;
     final strava = ref.watch(stravaProvider);
     final activities = strava.state == StravaState.ready
         ? strava.activities
@@ -183,7 +266,7 @@ class _PlanView extends ConsumerWidget {
                             color: accent.primary)),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () => _confirmDelete(context, ref),
+                      onTap: () => _confirmDelete(context),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 5),
@@ -246,10 +329,46 @@ class _PlanView extends ConsumerWidget {
           ),
         ),
 
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+        // Rest day toggle
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 12, 24, 4),
+            child: GestureDetector(
+              onTap: () => setState(() => _hideRestDays = !_hideRestDays),
+              behavior: HitTestBehavior.opaque,
+              child: Row(
+                children: [
+                  Icon(
+                    _hideRestDays
+                        ? Icons.visibility_off_rounded
+                        : Icons.visibility_rounded,
+                    size: 16,
+                    color: PaceColors.textMuted,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _hideRestDays ? 'Show rest days' : 'Hide rest days',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: PaceColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 4)),
 
         // Weekly timeline
-        ...weeks.entries.map((entry) => SliverToBoxAdapter(
+        ...weeks.entries.map((entry) {
+          final weekDays = _hideRestDays
+              ? entry.value.where((d) => d.sessionType != 'rest').toList()
+              : entry.value;
+          if (weekDays.isEmpty) return const SliverToBoxAdapter(child: SizedBox.shrink());
+          return SliverToBoxAdapter(
               child: Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
@@ -268,10 +387,10 @@ class _PlanView extends ConsumerWidget {
                             letterSpacing: 0.8),
                       ),
                     ),
-                    ...entry.value.asMap().entries.map((dayEntry) {
+                    ...weekDays.asMap().entries.map((dayEntry) {
                       final d = dayEntry.value;
                       final isToday =
-                          startDate != null && _isDayToday(d, startDate!);
+                          startDate != null && _isDayToday(d, startDate);
                       return _DayRow(
                         day: d,
                         accent: accent,
@@ -284,7 +403,8 @@ class _PlanView extends ConsumerWidget {
                   ],
                 ),
               ),
-            )),
+            );
+          }),
 
         // Export to calendar button
         SliverToBoxAdapter(
@@ -316,8 +436,8 @@ class _PlanView extends ConsumerWidget {
   ];
 
   String _weekHeader(int weekNum) {
-    if (startDate == null) return 'WEEK $weekNum';
-    final weekStart = startDate!.add(Duration(days: (weekNum - 1) * 7));
+    if (widget.startDate == null) return 'WEEK $weekNum';
+    final weekStart = widget.startDate!.add(Duration(days: (weekNum - 1) * 7));
     final weekEnd = weekStart.add(const Duration(days: 6));
     return 'WEEK $weekNum — ${_monthNames[weekStart.month - 1]} ${weekStart.day} – ${_monthNames[weekEnd.month - 1]} ${weekEnd.day}';
   }
@@ -331,7 +451,7 @@ class _PlanView extends ConsumerWidget {
         dayDate.day == now.day;
   }
 
-  void _confirmDelete(BuildContext context, WidgetRef ref) {
+  void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -351,10 +471,13 @@ class _PlanView extends ConsumerWidget {
           ),
           TextButton(
             onPressed: () async {
+              final planNotifier = ref.read(planProvider.notifier);
+              final chatNotifier = ref.read(chatProvider.notifier);
+              final settingsNotifier = ref.read(settingsProvider.notifier);
               Navigator.pop(ctx);
-              await ref.read(planProvider.notifier).deletePlan();
-              await ref.read(chatProvider.notifier).clearChat();
-              await ref.read(settingsProvider.notifier).resetSetup();
+              await planNotifier.deletePlan();
+              await chatNotifier.clearChat();
+              await settingsNotifier.resetSetup();
             },
             child: const Text('Delete',
                 style: TextStyle(color: Color(0xFFFF6B6B))),
@@ -366,9 +489,10 @@ class _PlanView extends ConsumerWidget {
 
   void _showCalendarExport(BuildContext context) {
     showModalBottomSheet(
+      useRootNavigator: true,
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (_) => _CalendarExportSheet(days: days, accent: accent),
+      builder: (_) => _CalendarExportSheet(days: widget.days, accent: widget.accent),
     );
   }
 }
@@ -1094,13 +1218,15 @@ class _DayDetailSheet extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: accent.primary.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: accent.primary.withValues(alpha: 0.3)),
                 color: accent.primary.withValues(alpha: 0.06),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.chat_bubble_outline_rounded, size: 16, color: accent.primary),
+                  Icon(Icons.chat_bubble_outline_rounded,
+                      size: 16, color: accent.primary),
                   const SizedBox(width: 8),
                   Text(
                     'Ask Coach about this session',

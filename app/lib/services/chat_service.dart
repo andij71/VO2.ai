@@ -20,12 +20,17 @@ class PlanAction {
 class ChatResponse {
   final String message;
   final List<PlanAction> actions;
+  final List<String> options;
 
-  const ChatResponse({required this.message, this.actions = const []});
+  const ChatResponse({required this.message, this.actions = const [], this.options = const []});
 }
 
 class ChatService {
   static const systemPrompt = '''You are VO2.ai, an expert running coach. You are knowledgeable, encouraging, and concise. Give actionable advice based on the runner's current plan, fitness level, and training context. Keep responses under 3 paragraphs unless the user asks for detail.
+
+LANGUAGE & FORMAT:
+- Always reply in the same language the user writes in.
+- Use markdown formatting: **bold** for emphasis, bullet lists for structure, headers for sections when needed. Keep it readable on mobile.
 
 PLAN MODIFICATION:
 When the user asks to change their training plan, you MUST include a JSON action block at the END of your message inside a fenced code block labeled "actions":
@@ -39,10 +44,27 @@ Action types:
 - "swap_days": Swap two days. Params: week1, day1, week2, day2
 - "rest_day": Convert a day to rest. Params: week (int), dayOfWeek (int)
 
-You can include multiple actions in the array. Always explain what you're changing in plain text BEFORE the action block. If the user is just asking questions, do NOT include an action block.''';
+You can include multiple actions in the array. Always explain what you're changing in plain text BEFORE the action block. If the user is just asking questions, do NOT include an action block.
+
+FOLLOW-UP OPTIONS:
+After EVERY response, include 2-3 short follow-up options the user might want to ask next. Place them in a fenced code block labeled "options" at the very end:
+
+```options
+["Option 1", "Option 2", "Option 3"]
+```
+
+Options should be short (under 8 words), relevant to the conversation, and training-focused. Examples:
+- "How should I warm up?"
+- "Make it easier this week"
+- "What if I feel tired?"
+- "Show me alternative paces"
+Do NOT suggest options for things the app already handles (changing settings, connecting Strava, switching AI model, changing accent color).''';
 
   static const _goalNames = {
+    'c25k': 'couch to 5K',
+    'first5k': 'first 5K',
     'sub20': 'sub-20 minute 5K',
+    '10k': '10K',
     'hm': 'half marathon',
     'fm': 'full marathon',
     'speed': '1K speed',
@@ -94,65 +116,78 @@ You can include multiple actions in the array. Always explain what you're changi
     ];
   }
 
-  /// Parse AI response — extracts text and any plan actions from ```actions blocks or $$$ACTIONS blocks
+  /// Parse AI response — extracts text, plan actions, and follow-up options
   static ChatResponse parseResponse(String raw) {
     debugPrint('[ChatService] Parsing response (${raw.length} chars)');
 
-    // Try ```actions\n[...]\n``` format
-    final codeBlockRegex = RegExp(r'```actions?\s*\n([\s\S]*?)\n```');
-    final codeMatch = codeBlockRegex.firstMatch(raw);
+    var text = raw;
+    List<String> options = [];
+    List<PlanAction> actions = [];
 
-    if (codeMatch != null) {
-      final jsonStr = codeMatch.group(1)!.trim();
-      final message = raw.substring(0, codeMatch.start).trim();
-      debugPrint('[ChatService] Found actions code block: $jsonStr');
+    // Extract ```options\n[...]\n``` block
+    final optionsRegex = RegExp(r'```options?\s*\n([\s\S]*?)\n```');
+    final optionsMatch = optionsRegex.firstMatch(text);
+    if (optionsMatch != null) {
+      try {
+        final decoded = jsonDecode(optionsMatch.group(1)!.trim());
+        if (decoded is List) {
+          options = decoded.cast<String>();
+          debugPrint('[ChatService] Found ${options.length} options');
+        }
+      } catch (e) {
+        debugPrint('[ChatService] Failed to parse options: $e');
+      }
+      text = text.replaceRange(optionsMatch.start, optionsMatch.end, '').trim();
+    }
 
-      final actions = _parseActions(jsonStr);
-      if (actions != null) {
-        return ChatResponse(message: message, actions: actions);
+    // Extract ```actions\n[...]\n``` block
+    final actionsRegex = RegExp(r'```actions?\s*\n([\s\S]*?)\n```');
+    final actionsMatch = actionsRegex.firstMatch(text);
+    if (actionsMatch != null) {
+      final parsed = _parseActions(actionsMatch.group(1)!.trim());
+      if (parsed != null) actions = parsed;
+      text = text.substring(0, actionsMatch.start).trim();
+    }
+
+    // Fallback: $$$ACTIONS\n[...]\n$$$ format
+    if (actions.isEmpty) {
+      final dollarRegex = RegExp(r'\$\$\$ACTIONS\s*\n?([\s\S]*?)\n?\$\$\$');
+      final dollarMatch = dollarRegex.firstMatch(text);
+      if (dollarMatch != null) {
+        final parsed = _parseActions(dollarMatch.group(1)!.trim());
+        if (parsed != null) actions = parsed;
+        text = text.substring(0, dollarMatch.start).trim();
       }
     }
 
-    // Try $$$ACTIONS\n[...]\n$$$ format (fallback)
-    final dollarRegex = RegExp(r'\$\$\$ACTIONS\s*\n?([\s\S]*?)\n?\$\$\$');
-    final dollarMatch = dollarRegex.firstMatch(raw);
-
-    if (dollarMatch != null) {
-      final jsonStr = dollarMatch.group(1)!.trim();
-      final message = raw.substring(0, dollarMatch.start).trim();
-      debugPrint('[ChatService] Found \$\$\$ACTIONS block: $jsonStr');
-
-      final actions = _parseActions(jsonStr);
-      if (actions != null) {
-        return ChatResponse(message: message, actions: actions);
-      }
-    }
-
-    // Last resort: look for a JSON array at the end of the response
-    final lastBracket = raw.lastIndexOf(']');
-    if (lastBracket != -1) {
-      // Walk backwards to find matching [
-      var depth = 0;
-      for (var i = lastBracket; i >= 0; i--) {
-        if (raw[i] == ']') depth++;
-        if (raw[i] == '[') depth--;
-        if (depth == 0) {
-          final jsonStr = raw.substring(i, lastBracket + 1);
-          if (jsonStr.contains('"type"') && jsonStr.contains('"params"')) {
-            debugPrint('[ChatService] Found trailing JSON array');
-            final actions = _parseActions(jsonStr);
-            if (actions != null) {
-              final message = raw.substring(0, i).trim();
-              return ChatResponse(message: message, actions: actions);
+    // Last resort: trailing JSON array with action shape
+    if (actions.isEmpty) {
+      final lastBracket = text.lastIndexOf(']');
+      if (lastBracket != -1) {
+        var depth = 0;
+        for (var i = lastBracket; i >= 0; i--) {
+          if (text[i] == ']') depth++;
+          if (text[i] == '[') depth--;
+          if (depth == 0) {
+            final jsonStr = text.substring(i, lastBracket + 1);
+            if (jsonStr.contains('"type"') && jsonStr.contains('"params"')) {
+              final parsed = _parseActions(jsonStr);
+              if (parsed != null) {
+                actions = parsed;
+                text = text.substring(0, i).trim();
+              }
             }
+            break;
           }
-          break;
         }
       }
     }
 
-    debugPrint('[ChatService] No actions found in response');
-    return ChatResponse(message: raw.trim());
+    if (actions.isEmpty && options.isEmpty) {
+      debugPrint('[ChatService] No actions or options found');
+    }
+
+    return ChatResponse(message: text, actions: actions, options: options);
   }
 
   static List<PlanAction>? _parseActions(String jsonStr) {

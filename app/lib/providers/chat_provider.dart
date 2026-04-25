@@ -32,6 +32,8 @@ class ChatMessage {
   final bool isLoading;
   final bool hasPlanChange;
   final List<PlanActionSummary> planActions;
+  final List<String> options;
+  final DateTime? createdAt;
 
   const ChatMessage({
     required this.role,
@@ -39,6 +41,8 @@ class ChatMessage {
     this.isLoading = false,
     this.hasPlanChange = false,
     this.planActions = const [],
+    this.options = const [],
+    this.createdAt,
   });
 }
 
@@ -90,22 +94,28 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
   }
 
   Future<void> loadMessages() async {
-    final history = await loadHistory(_db);
+    final msgs = await (_db.select(_db.chatMessages)
+          ..orderBy([(t) => OrderingTerm.asc(t.createdAt)]))
+        .get();
     if (!mounted) return;
-    state = history
-        .map((m) => ChatMessage(role: m['role']!, content: m['content']!))
+    state = msgs
+        .map((m) => ChatMessage(
+              role: m.role,
+              content: m.content,
+              createdAt: m.createdAt,
+            ))
         .toList();
   }
 
   Future<void> sendMessage(String content, {PlanDay? pinnedDay}) async {
     if (_ai == null) return;
 
-    state = [...state, ChatMessage(role: 'user', content: content)];
+    state = [...state, ChatMessage(role: 'user', content: content, createdAt: DateTime.now())];
     await saveMessage(_db, role: 'user', content: content);
 
     state = [
       ...state,
-      const ChatMessage(role: 'assistant', content: '', isLoading: true)
+      ChatMessage(role: 'assistant', content: '', isLoading: true, createdAt: DateTime.now())
     ];
 
     try {
@@ -204,6 +214,8 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
           content: parsed.message,
           hasPlanChange: hasActions,
           planActions: actionSummaries,
+          options: parsed.options,
+          createdAt: DateTime.now(),
         ),
       ];
 
@@ -217,7 +229,7 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       if (!mounted) return;
       state = [
         ...state.where((m) => !m.isLoading),
-        ChatMessage(role: 'assistant', content: 'Error: $e'),
+        ChatMessage(role: 'assistant', content: 'Error: $e', createdAt: DateTime.now()),
       ];
     }
   }

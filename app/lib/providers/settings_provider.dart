@@ -63,12 +63,18 @@ class UserSetup {
 }
 
 const availableModels = [
-  // ('anthropic/claude-sonnet-4', 'Claude Sonnet 4', '\$0.003/1K tokens'),
-  // ('anthropic/claude-haiku-4', 'Claude Haiku 4', '\$0.0008/1K tokens'),
-  // ('openai/gpt-4o', 'GPT-4o', '\$0.005/1K tokens'),
-  // ('openai/gpt-4o-mini', 'GPT-4o Mini', '\$0.0003/1K tokens'),
-  ('google/gemini-2.5-flash-lite', 'Gemini 2.5 Flash', '\$0.0003/1K tokens'),
-  // ('google/gemma-4-31b-it:free', 'Gemma 4 31B (Free)', 'Free'),
+  // Default — STABIL (GA), bewährt, günstig
+  ('google/gemini-2.5-flash', 'Gemini 2.5 Flash', '~\$0.30/1M tokens'),
+
+  // Optional Premium — auch GA, beste Reasoning
+  ('anthropic/claude-haiku-4-5', 'Claude Haiku 4.5', '~\$1.25/1M tokens'),
+
+  // Optional Cutting-Edge — Preview, für Power-User
+  (
+    'google/gemini-3.1-flash-lite-preview',
+    'Gemini 3.1 Flash Lite (Preview)',
+    '~\$0.25/1M tokens'
+  ),
 ];
 
 class SettingsNotifier extends StateNotifier<UserSetup> {
@@ -83,7 +89,8 @@ class SettingsNotifier extends StateNotifier<UserSetup> {
   void setGoal(String goal) => state = state.copyWith(goal: goal);
   void setLevel(String level) => state = state.copyWith(level: level);
   void setDaysPerWeek(int days) => state = state.copyWith(daysPerWeek: days);
-  void setRunningDays(List<int> days) => state = state.copyWith(runningDays: days, daysPerWeek: days.length);
+  void setRunningDays(List<int> days) =>
+      state = state.copyWith(runningDays: days, daysPerWeek: days.length);
   void setWeeklyKm(double km) => state = state.copyWith(weeklyKm: km);
   void setMobility(bool v) => state = state.copyWith(mobility: v);
   void setProNames(bool v) => state = state.copyWith(proNames: v);

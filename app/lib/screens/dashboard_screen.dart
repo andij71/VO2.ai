@@ -48,7 +48,10 @@ class DashboardScreen extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     strava.athleteName ?? 'Runner',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(fontSize: 28),
+                    style: Theme.of(context)
+                        .textTheme
+                        .headlineLarge
+                        ?.copyWith(fontSize: 28),
                   ),
                 ],
               ),
@@ -56,7 +59,9 @@ class DashboardScreen extends ConsumerWidget {
           ),
 
           // Next Session Card
-          if (plan.state == PlanState.ready && plan.days != null && plan.days!.isNotEmpty)
+          if (plan.state == PlanState.ready &&
+              plan.days != null &&
+              plan.days!.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
@@ -77,16 +82,21 @@ class DashboardScreen extends ConsumerWidget {
                     padding: const EdgeInsets.all(20),
                     child: Column(
                       children: [
-                        Icon(Icons.directions_run_rounded, size: 40, color: accent.dim),
+                        Icon(Icons.directions_run_rounded,
+                            size: 40, color: accent.dim),
                         const SizedBox(height: 12),
                         const Text(
                           'No training plan yet',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white),
                         ),
                         const SizedBox(height: 4),
                         const Text(
                           'Go to the Plan tab to generate your personalized plan',
-                          style: TextStyle(fontSize: 13, color: PaceColors.textSecondary),
+                          style: TextStyle(
+                              fontSize: 13, color: PaceColors.textSecondary),
                           textAlign: TextAlign.center,
                         ),
                       ],
@@ -101,7 +111,8 @@ class DashboardScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
-                child: _StravaStatsGrid(activities: strava.activities, accent: accent),
+                child: _StravaStatsGrid(
+                    activities: strava.activities, accent: accent),
               ),
             )
           else
@@ -120,7 +131,8 @@ class DashboardScreen extends ConsumerWidget {
                 child: _RecentRunsCard(
                   activities: strava.activities,
                   accent: accent,
-                  onRefresh: () => ref.read(stravaProvider.notifier).fetchActivities(),
+                  onRefresh: () =>
+                      ref.read(stravaProvider.notifier).fetchActivities(),
                 ),
               ),
             ),
@@ -155,7 +167,8 @@ class DashboardScreen extends ConsumerWidget {
     // Find the first non-rest, non-completed day on or after today
     for (final day in days) {
       if (day.sessionType == 'rest' || day.completed) continue;
-      final dayDate = startDate.add(Duration(days: (day.week - 1) * 7 + day.dayOfWeek));
+      final dayDate =
+          startDate.add(Duration(days: (day.week - 1) * 7 + day.dayOfWeek));
       final dayDateOnly = DateTime(dayDate.year, dayDate.month, dayDate.day);
       if (!dayDateOnly.isBefore(today)) return day;
     }
@@ -202,29 +215,39 @@ class _NextSessionCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                AccentPill(label: day!.sessionType.toUpperCase(), color: typeColor),
+                AccentPill(
+                    label: day!.sessionType.toUpperCase(), color: typeColor),
               ],
             ),
             const SizedBox(height: 12),
             Text(
               day!.label,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: Colors.white),
+              style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                _StatChip(icon: Icons.straighten_rounded, label: '${day!.distanceKm} km'),
+                _StatChip(
+                    icon: Icons.straighten_rounded,
+                    label: '${day!.distanceKm} km'),
                 const SizedBox(width: 16),
-                _StatChip(icon: Icons.speed_rounded, label: '${day!.targetPace}/km'),
+                _StatChip(
+                    icon: Icons.speed_rounded, label: '${day!.targetPace}/km'),
                 const SizedBox(width: 16),
-                _StatChip(icon: Icons.local_fire_department_rounded, label: 'Zone ${day!.effortZone}'),
+                _StatChip(
+                    icon: Icons.local_fire_department_rounded,
+                    label: 'Zone ${day!.effortZone}'),
               ],
             ),
             if (day!.notes != null && day!.notes!.isNotEmpty) ...[
               const SizedBox(height: 10),
               Text(
                 day!.notes!,
-                style: const TextStyle(fontSize: 13, color: PaceColors.textSecondary, height: 1.4),
+                style: const TextStyle(
+                    fontSize: 13, color: PaceColors.textSecondary, height: 1.4),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -249,7 +272,11 @@ class _StatChip extends StatelessWidget {
       children: [
         Icon(icon, size: 14, color: PaceColors.textSecondary),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: PaceColors.textSecondary)),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: PaceColors.textSecondary)),
       ],
     );
   }
@@ -303,9 +330,15 @@ class _StatTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Text(value, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w700, color: Colors.white)),
+                Text(value,
+                    style: const TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white)),
                 const SizedBox(width: 3),
-                Text(unit, style: const TextStyle(fontSize: 13, color: PaceColors.textSecondary)),
+                Text(unit,
+                    style: const TextStyle(
+                        fontSize: 13, color: PaceColors.textSecondary)),
               ],
             ),
           ],
@@ -328,14 +361,18 @@ class _StravaStatsGrid extends StatelessWidget {
     final avgPaces = activities.where((a) => a.averageSpeed > 0).toList();
     final avgSpeed = avgPaces.isEmpty
         ? 0.0
-        : avgPaces.fold<double>(0, (s, a) => s + a.averageSpeed) / avgPaces.length;
+        : avgPaces.fold<double>(0, (s, a) => s + a.averageSpeed) /
+            avgPaces.length;
     final avgPaceSecs = avgSpeed > 0 ? 1000 / avgSpeed : 0.0;
     final avgMins = avgPaceSecs ~/ 60;
     final avgSecs = (avgPaceSecs % 60).round();
-    final longestRun = activities.fold<double>(0, (m, a) => a.distanceKm > m ? a.distanceKm : m);
+    final longestRun = activities.fold<double>(
+        0, (m, a) => a.distanceKm > m ? a.distanceKm : m);
 
     final weeksSpan = activities.isNotEmpty
-        ? (DateTime.now().difference(activities.last.startDate).inDays / 7).ceil().clamp(1, 52)
+        ? (DateTime.now().difference(activities.last.startDate).inDays / 7)
+            .ceil()
+            .clamp(1, 52)
         : 1;
     final weeklyKm = totalKm / weeksSpan;
 
@@ -343,7 +380,8 @@ class _StravaStatsGrid extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'WEEKLY AVG',
               value: weeklyKm.toStringAsFixed(1),
               unit: 'km/wk',
@@ -351,19 +389,23 @@ class _StravaStatsGrid extends StatelessWidget {
               progress: (weeklyKm / 50).clamp(0.0, 1.0),
             )),
             const SizedBox(width: 10),
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'AVG PACE',
               value: '$avgMins:${avgSecs.toString().padLeft(2, '0')}',
               unit: '/km',
               color: const Color(0xFF8B9EFF),
-              progress: avgPaceSecs > 0 ? (1 - (avgPaceSecs - 240) / 240).clamp(0.0, 1.0) : 0,
+              progress: avgPaceSecs > 0
+                  ? (1 - (avgPaceSecs - 240) / 240).clamp(0.0, 1.0)
+                  : 0,
             )),
           ],
         ),
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'TOTAL RUNS',
               value: '$totalRuns',
               unit: 'runs',
@@ -371,7 +413,8 @@ class _StravaStatsGrid extends StatelessWidget {
               progress: (totalRuns / 30).clamp(0.0, 1.0),
             )),
             const SizedBox(width: 10),
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'LONGEST RUN',
               value: longestRun.toStringAsFixed(1),
               unit: 'km',
@@ -400,13 +443,16 @@ class _TrainingStatsGrid extends StatelessWidget {
     final totalSessions = days.where((d) => d.sessionType != 'rest').length;
     final completed = days.where((d) => d.completed).length;
     final totalKm = days.fold<double>(0, (s, d) => s + d.distanceKm);
-    final weeks = days.isEmpty ? 0 : days.map((d) => d.week).reduce((a, b) => a > b ? a : b);
+    final weeks = days.isEmpty
+        ? 0
+        : days.map((d) => d.week).reduce((a, b) => a > b ? a : b);
 
     return Column(
       children: [
         Row(
           children: [
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'TOTAL SESSIONS',
               value: '$totalSessions',
               unit: 'runs',
@@ -414,7 +460,8 @@ class _TrainingStatsGrid extends StatelessWidget {
               progress: weeks > 0 ? completed / totalSessions : 0,
             )),
             const SizedBox(width: 10),
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'PLAN VOLUME',
               value: totalKm.toStringAsFixed(0),
               unit: 'km',
@@ -426,7 +473,8 @@ class _TrainingStatsGrid extends StatelessWidget {
         const SizedBox(height: 10),
         Row(
           children: [
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'WEEKS',
               value: '$weeks',
               unit: 'total',
@@ -434,7 +482,8 @@ class _TrainingStatsGrid extends StatelessWidget {
               progress: weeks > 0 ? 1.0 : 0,
             )),
             const SizedBox(width: 10),
-            Expanded(child: _StatTile(
+            Expanded(
+                child: _StatTile(
               label: 'COMPLETED',
               value: '$completed',
               unit: 'of $totalSessions',
@@ -459,7 +508,8 @@ class _WeeklyVolumeCard extends StatelessWidget {
     // Get week 1 data for display
     final week1 = days.where((d) => d.week == 1).toList();
     final dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-    final maxDist = week1.fold<double>(0, (m, d) => d.distanceKm > m ? d.distanceKm : m);
+    final maxDist =
+        week1.fold<double>(0, (m, d) => d.distanceKm > m ? d.distanceKm : m);
     final totalDist = week1.fold<double>(0, (s, d) => s + d.distanceKm);
 
     return GlassCard(
@@ -472,12 +522,19 @@ class _WeeklyVolumeCard extends StatelessWidget {
               children: [
                 const Text(
                   'WEEKLY VOLUME',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: PaceColors.textTertiary),
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: PaceColors.textTertiary),
                 ),
                 const Spacer(),
                 Text(
                   '${totalDist.toStringAsFixed(1)} km',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: accent.primary),
+                  style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: accent.primary),
                 ),
               ],
             ),
@@ -488,7 +545,8 @@ class _WeeklyVolumeCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: List.generate(7, (i) {
                   final dayData = week1.where((d) => d.dayOfWeek == i).toList();
-                  final dist = dayData.isNotEmpty ? dayData.first.distanceKm : 0.0;
+                  final dist =
+                      dayData.isNotEmpty ? dayData.first.distanceKm : 0.0;
                   final fraction = maxDist > 0 ? dist / maxDist : 0.0;
                   final typeColor = dayData.isNotEmpty
                       ? switch (dayData.first.sessionType) {
@@ -511,11 +569,16 @@ class _WeeklyVolumeCard extends StatelessWidget {
                             child: Align(
                               alignment: Alignment.bottomCenter,
                               child: FractionallySizedBox(
-                                heightFactor: fraction > 0 ? fraction.clamp(0.08, 1.0) : 0.08,
+                                heightFactor: fraction > 0
+                                    ? fraction.clamp(0.08, 1.0)
+                                    : 0.08,
                                 child: Container(
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(4),
-                                    color: dist > 0 ? typeColor.withValues(alpha: 0.6) : PaceColors.textMuted.withValues(alpha: 0.15),
+                                    color: dist > 0
+                                        ? typeColor.withValues(alpha: 0.6)
+                                        : PaceColors.textMuted
+                                            .withValues(alpha: 0.15),
                                   ),
                                 ),
                               ),
@@ -524,7 +587,10 @@ class _WeeklyVolumeCard extends StatelessWidget {
                           const SizedBox(height: 6),
                           Text(
                             dayNames[i],
-                            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: PaceColors.textMuted),
+                            style: const TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: PaceColors.textMuted),
                           ),
                         ],
                       ),
@@ -566,7 +632,11 @@ class _RecentRunsCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 const Text(
                   'RECENT RUNS',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.8, color: PaceColors.textTertiary),
+                  style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: PaceColors.textTertiary),
                 ),
                 const Spacer(),
                 GestureDetector(
@@ -577,46 +647,55 @@ class _RecentRunsCard extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: const Color.fromRGBO(255, 255, 255, 0.06),
                     ),
-                    child: const Icon(Icons.refresh_rounded, size: 16, color: PaceColors.textSecondary),
+                    child: const Icon(Icons.refresh_rounded,
+                        size: 16, color: PaceColors.textSecondary),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             ...activities.take(5).map((run) => GestureDetector(
-              onTap: () => _showRunDetail(context, run),
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  children: [
-                    SizedBox(
-                      width: 42,
-                      child: Text(
-                        '${run.startDate.day}.${run.startDate.month}.',
-                        style: const TextStyle(fontSize: 12, color: PaceColors.textMuted, fontWeight: FontWeight.w600),
-                      ),
+                  onTap: () => _showRunDetail(context, run),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 42,
+                          child: Text(
+                            '${run.startDate.day}.${run.startDate.month}.',
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: PaceColors.textMuted,
+                                fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            run.name,
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.white),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '${run.distanceKm.toStringAsFixed(1)}km',
+                          style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: PaceColors.textSecondary),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          run.pacePerKm,
+                          style: const TextStyle(
+                              fontSize: 13, color: PaceColors.textMuted),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: Text(
-                        run.name,
-                        style: const TextStyle(fontSize: 14, color: Colors.white),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${run.distanceKm.toStringAsFixed(1)}km',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: PaceColors.textSecondary),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      run.pacePerKm,
-                      style: const TextStyle(fontSize: 13, color: PaceColors.textMuted),
-                    ),
-                  ],
-                ),
-              ),
-            )),
+                  ),
+                )),
             if (activities.length > 5)
               GestureDetector(
                 onTap: () => _showAllRuns(context),
@@ -624,7 +703,10 @@ class _RecentRunsCard extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
                     'Show all ${activities.length} runs',
-                    style: TextStyle(fontSize: 13, color: accent.primary, fontWeight: FontWeight.w600),
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: accent.primary,
+                        fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -636,6 +718,7 @@ class _RecentRunsCard extends StatelessWidget {
 
   void _showRunDetail(BuildContext context, StravaActivity run) {
     showModalBottomSheet(
+      useRootNavigator: true,
       context: context,
       backgroundColor: const Color(0xFF121214),
       shape: const RoundedRectangleBorder(
@@ -669,9 +752,7 @@ class _RunDetailSheet extends StatelessWidget {
     final hrs = duration.inHours;
     final mins = duration.inMinutes % 60;
     final secs = duration.inSeconds % 60;
-    final durationStr = hrs > 0
-        ? '${hrs}h ${mins}m'
-        : '${mins}m ${secs}s';
+    final durationStr = hrs > 0 ? '${hrs}h ${mins}m' : '${mins}m ${secs}s';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
@@ -681,24 +762,31 @@ class _RunDetailSheet extends StatelessWidget {
         children: [
           Center(
             child: Container(
-              width: 36, height: 4,
-              decoration: BoxDecoration(color: PaceColors.textMuted, borderRadius: BorderRadius.circular(2)),
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                  color: PaceColors.textMuted,
+                  borderRadius: BorderRadius.circular(2)),
             ),
           ),
           const SizedBox(height: 20),
           Text(
             run.name,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
+            style: const TextStyle(
+                fontSize: 20, fontWeight: FontWeight.w700, color: Colors.white),
           ),
           const SizedBox(height: 4),
           Text(
             '${run.startDate.day}.${run.startDate.month}.${run.startDate.year}',
-            style: const TextStyle(fontSize: 14, color: PaceColors.textSecondary),
+            style:
+                const TextStyle(fontSize: 14, color: PaceColors.textSecondary),
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              _DetailStat(label: 'Distance', value: '${run.distanceKm.toStringAsFixed(2)} km'),
+              _DetailStat(
+                  label: 'Distance',
+                  value: '${run.distanceKm.toStringAsFixed(2)} km'),
               _DetailStat(label: 'Duration', value: durationStr),
               _DetailStat(label: 'Pace', value: '${run.pacePerKm}/km'),
             ],
@@ -706,9 +794,13 @@ class _RunDetailSheet extends StatelessWidget {
           const SizedBox(height: 16),
           Row(
             children: [
-              _DetailStat(label: 'Elevation', value: '${run.totalElevationGain.toStringAsFixed(0)} m'),
+              _DetailStat(
+                  label: 'Elevation',
+                  value: '${run.totalElevationGain.toStringAsFixed(0)} m'),
               if (run.hasHeartrate && run.averageHeartrate != null)
-                _DetailStat(label: 'Avg HR', value: '${run.averageHeartrate!.round()} bpm'),
+                _DetailStat(
+                    label: 'Avg HR',
+                    value: '${run.averageHeartrate!.round()} bpm'),
               _DetailStat(label: 'Type', value: run.type),
             ],
           ),
@@ -729,9 +821,18 @@ class _DetailStat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(fontSize: 11, color: PaceColors.textMuted, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 11,
+                  color: PaceColors.textMuted,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 0.5)),
           const SizedBox(height: 4),
-          Text(value, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: Colors.white)),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white)),
         ],
       ),
     );
@@ -756,8 +857,11 @@ class _AllRunsSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Container(
-                width: 36, height: 4,
-                decoration: BoxDecoration(color: PaceColors.textMuted, borderRadius: BorderRadius.circular(2)),
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: PaceColors.textMuted,
+                    borderRadius: BorderRadius.circular(2)),
               ),
             ),
             Padding(
@@ -768,7 +872,10 @@ class _AllRunsSheet extends StatelessWidget {
                   const SizedBox(width: 8),
                   Text(
                     '${activities.length} Runs (last 90 days)',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                    style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white),
                   ),
                 ],
               ),
@@ -788,14 +895,16 @@ class _AllRunsSheet extends StatelessWidget {
                         context: context,
                         backgroundColor: const Color(0xFF121214),
                         shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20)),
                         ),
                         builder: (_) => _RunDetailSheet(run: run),
                       );
                     },
                     child: Container(
                       margin: const EdgeInsets.only(bottom: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 12),
                       decoration: BoxDecoration(
                         color: const Color.fromRGBO(255, 255, 255, 0.04),
                         borderRadius: BorderRadius.circular(12),
@@ -806,17 +915,25 @@ class _AllRunsSheet extends StatelessWidget {
                             width: 48,
                             child: Text(
                               '${run.startDate.day}.${run.startDate.month}.',
-                              style: const TextStyle(fontSize: 13, color: PaceColors.textMuted, fontWeight: FontWeight.w600),
+                              style: const TextStyle(
+                                  fontSize: 13,
+                                  color: PaceColors.textMuted,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(run.name, style: const TextStyle(fontSize: 14, color: Colors.white), overflow: TextOverflow.ellipsis),
+                                Text(run.name,
+                                    style: const TextStyle(
+                                        fontSize: 14, color: Colors.white),
+                                    overflow: TextOverflow.ellipsis),
                                 Text(
                                   '${run.distanceKm.toStringAsFixed(1)}km  ·  ${run.pacePerKm}/km  ·  ${run.durationFormatted}',
-                                  style: const TextStyle(fontSize: 12, color: PaceColors.textSecondary),
+                                  style: const TextStyle(
+                                      fontSize: 12,
+                                      color: PaceColors.textSecondary),
                                 ),
                               ],
                             ),

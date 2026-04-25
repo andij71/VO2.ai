@@ -9,6 +9,7 @@
 // the dark functional UI at /auth.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -127,9 +128,18 @@ class _DisclaimerScreenState extends ConsumerState<DisclaimerScreen> {
                       ),
                       child: Scrollbar(
                         child: SingleChildScrollView(
-                          child: Text(
-                            DisclaimerText.body(lang),
-                            style: bodyStyle,
+                          child: MarkdownBody(
+                            data: DisclaimerText.body(lang),
+                            styleSheet: MarkdownStyleSheet(
+                              p: bodyStyle,
+                              h1: bodyStyle.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
+                              h2: bodyStyle.copyWith(fontSize: 17, fontWeight: FontWeight.w600),
+                              h3: bodyStyle.copyWith(fontSize: 15, fontWeight: FontWeight.w600),
+                              listBullet: bodyStyle,
+                              strong: bodyStyle.copyWith(fontWeight: FontWeight.w600),
+                              em: bodyStyle.copyWith(fontStyle: FontStyle.italic),
+                              blockSpacing: 12,
+                            ),
                           ),
                         ),
                       ),
