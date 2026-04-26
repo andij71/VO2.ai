@@ -1,7 +1,7 @@
 name: vo2_ai
 description: AI Running Coach
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+4
 
 environment:
   sdk: ^3.5.0
@@ -27,6 +27,8 @@ dependencies:
   shared_preferences: ^2.5.5
   google_fonts: ^6.2.1
   flutter_markdown: ^0.7.7+1
+  package_info_plus: ^8.3.0
+
 
 dev_dependencies:
   flutter_test:
@@ -38,12 +40,20 @@ dev_dependencies:
   mockito: ^5.4.5
   build_verify: ^3.1.0
   flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.4
 
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
   image_path: "assets/app_logo.png"
   min_sdk_android: 21
+
+flutter_native_splash:
+  color: "#f4eee5"
+  image: assets/app_logo_splash.png
+  ios: true
+  android: false
+  fullscreen: false
 
 flutter:
   uses-material-design: true

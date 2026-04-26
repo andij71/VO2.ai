@@ -59,7 +59,7 @@ class WelcomeScreen extends StatelessWidget {
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 280),
                 child: Image.asset(
-                  'assets/app_logo_full.png',
+                  'assets/app_logo_transparent.png',
                   fit: BoxFit.contain,
                 ),
               ),

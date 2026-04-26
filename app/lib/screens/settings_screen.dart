@@ -1,6 +1,7 @@
 // lib/screens/settings_screen.dart
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -426,12 +427,19 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Version 1.0.0',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: PaceColors.textTertiary,
-                    ),
+                  FutureBuilder<PackageInfo>(
+                    future: PackageInfo.fromPlatform(),
+                    builder: (context, snapshot) {
+                      final version = snapshot.data?.version ?? '...';
+                      final build = snapshot.data?.buildNumber ?? '';
+                      return Text(
+                        'Version $version${build.isNotEmpty ? ' ($build)' : ''}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: PaceColors.textTertiary,
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

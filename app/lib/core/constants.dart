@@ -29,7 +29,7 @@ class PaceColors {
 /// Once the user enters /auth, the dark `PaceColors` palette takes over.
 class BrandPalette {
   /// Paper background — matches the cream of `app_logo_full.png`.
-  static const paper = Color(0xFFF2EBE0);
+  static const paper = Color(0xFFf4eee5);
 
   /// Slightly sunken paper for inset cards / scroll panels.
   static const paperSunk = Color(0xFFEDE5D7);
@@ -80,10 +80,10 @@ class AccentPreset {
   );
 
   static AccentPreset fromName(String name) => switch (name) {
-    'violet' => violet,
-    'cyan' => cyan,
-    _ => volt,
-  };
+        'violet' => violet,
+        'cyan' => cyan,
+        _ => volt,
+      };
 }
 
 class PaceRadii {
