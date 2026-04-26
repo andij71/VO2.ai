@@ -27,8 +27,7 @@ class SettingsScreen extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           children: [
             const SizedBox(height: 20),
-            Text('Profile',
-                style: Theme.of(context).textTheme.headlineLarge),
+            Text('Profile', style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 32),
 
             // Strava section
@@ -97,7 +96,8 @@ class SettingsScreen extends ConsumerWidget {
                                 .fetchActivities(),
                             behavior: HitTestBehavior.opaque,
                             child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                              padding: EdgeInsets.symmetric(
+                                  vertical: 8, horizontal: 12),
                               child: Text('Refresh',
                                   style: TextStyle(
                                       fontSize: 13,
@@ -289,8 +289,8 @@ class SettingsScreen extends ConsumerWidget {
                         child: Row(
                           children: [
                             Text('Privacy Policy',
-                                style:
-                                    TextStyle(color: Colors.white, fontSize: 15)),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 15)),
                             Spacer(),
                             Icon(Icons.arrow_outward_rounded,
                                 color: PaceColors.textTertiary, size: 18),
@@ -311,8 +311,8 @@ class SettingsScreen extends ConsumerWidget {
                         child: Row(
                           children: [
                             Text('Open Source on GitHub',
-                                style:
-                                    TextStyle(color: Colors.white, fontSize: 15)),
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 15)),
                             Spacer(),
                             Icon(Icons.arrow_outward_rounded,
                                 color: PaceColors.textTertiary, size: 18),
@@ -375,8 +375,8 @@ class SettingsScreen extends ConsumerWidget {
               child: Column(
                 children: [
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 100,
+                    height: 100,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       boxShadow: [
@@ -389,16 +389,6 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     child: ClipOval(
                       child: Image.asset('assets/app_logo.png'),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'VO2.ai',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                      letterSpacing: -0.5,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -514,12 +504,14 @@ class SettingsScreen extends ConsumerWidget {
             color: color,
             border: selected ? Border.all(color: Colors.white, width: 2) : null,
             boxShadow: selected
-                ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 8)]
+                ? [
+                    BoxShadow(
+                        color: color.withValues(alpha: 0.4), blurRadius: 8)
+                  ]
                 : null,
           ),
         ),
       ),
     );
   }
-
 }
