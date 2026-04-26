@@ -44,6 +44,10 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (disclaimerStatus == DisclaimerStatus.unknown) return null;
 
       final path = state.uri.path;
+
+      // Strava OAuth callback — ignore, strava_client handles via app_links
+      if (path == '/redirect' || path == '/redirect/') return '/settings';
+
       final isDisclaimerPath = path == '/disclaimer';
       final isAuthPath = path == '/welcome' || path == '/auth';
       final isSetupPath = path == '/setup';

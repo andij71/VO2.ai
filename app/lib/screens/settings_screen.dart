@@ -31,31 +31,6 @@ class SettingsScreen extends ConsumerWidget {
                 style: Theme.of(context).textTheme.headlineLarge),
             const SizedBox(height: 32),
 
-            // Profile section
-            const Text('PROFILE',
-                style: TextStyle(
-                    fontSize: 11,
-                    color: PaceColors.textTertiary,
-                    letterSpacing: 0.8)),
-            const SizedBox(height: 10),
-            GlassCard(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _row('Goal', _goalLabel(setup.goal)),
-                    const Divider(
-                        color: Color.fromRGBO(255, 255, 255, 0.08), height: 24),
-                    _row('Level', setup.level ?? '—'),
-                    const Divider(
-                        color: Color.fromRGBO(255, 255, 255, 0.08), height: 24),
-                    _row('Days/week', '${setup.daysPerWeek}'),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-
             // Strava section
             const Text('STRAVA',
                 style: TextStyle(
@@ -547,13 +522,4 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  String _goalLabel(String? goal) {
-    return switch (goal) {
-      'sub20' => 'Sub-20 5K',
-      'hm' => 'Half Marathon',
-      'fm' => 'Full Marathon',
-      'speed' => 'Speed Builder',
-      _ => '—',
-    };
-  }
 }

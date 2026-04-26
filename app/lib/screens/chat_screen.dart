@@ -63,6 +63,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     ref.read(chatProvider.notifier).sendMessage(msg, pinnedDay: pinned);
     // Clear pinned day after sending
     ref.read(chatPinnedDayProvider.notifier).state = null;
+    FocusScope.of(context).unfocus();
     setState(() => _showStaleReplies = false);
     _startStaleTimer();
     Future.delayed(const Duration(milliseconds: 100), _scrollToBottom);

@@ -130,6 +130,51 @@ class StravaService {
     }
   }
 
+  /// Fetch detailed activity by ID (includes splits, segments, laps)
+  Future<DetailedStravaActivity?> fetchDetailedActivity(int activityId) async {
+    if (!_isConnected) return null;
+    if (!await _ensureValidToken()) return null;
+
+    try {
+      debugPrint('[Strava] Fetching detailed activity $activityId...');
+      final detail = await _client.activities.getActivity(activityId);
+      return DetailedStravaActivity(
+        splits: detail.splitsMetric
+                ?.map((s) => SplitData(
+                      split: s.split ?? 0,
+                      distanceMeters: s.distance ?? 0,
+                      movingTimeSeconds: s.movingTime ?? 0,
+                      averageSpeed: s.averageSpeed ?? 0,
+                      elevationDiff: s.elevationDifference ?? 0,
+                      paceZone: s.paceZone ?? 0,
+                    ))
+                .toList() ??
+            [],
+        segments: detail.segmentEfforts
+                ?.map((e) => SegmentEffortData(
+                      name: e.name ?? e.segment?.name ?? 'Segment',
+                      distanceMeters: e.distance ?? e.segment?.distance ?? 0,
+                      elapsedTimeSeconds: e.elapsedTime ?? 0,
+                      movingTimeSeconds: e.movingTime ?? 0,
+                      prRank: e.prRank,
+                      komRank: e.komRank,
+                      averageGrade: e.segment?.averageGrade,
+                    ))
+                .toList() ??
+            [],
+        calories: detail.calories ?? 0,
+        maxSpeed: detail.maxSpeed ?? 0,
+        averageCadence: detail.averageCadence,
+        sufferScore: detail.sufferScore?.toDouble(),
+        prCount: detail.prCount ?? 0,
+        deviceName: detail.deviceName,
+      );
+    } catch (e) {
+      debugPrint('[Strava] Fetch detailed activity failed: $e');
+      return null;
+    }
+  }
+
   /// Disconnect / deauthorize
   Future<void> disconnect() async {
     try {
@@ -242,4 +287,83 @@ class StravaActivity {
     final mins = movingTimeSeconds ~/ 60;
     return '${mins}min';
   }
+}
+
+/// Detailed activity data (splits, segments, etc.)
+class DetailedStravaActivity {
+  final List<SplitData> splits;
+  final List<SegmentEffortData> segments;
+  final double calories;
+  final double maxSpeed;
+  final double? averageCadence;
+  final double? sufferScore;
+  final int prCount;
+  final String? deviceName;
+
+  const DetailedStravaActivity({
+    required this.splits,
+    required this.segments,
+    required this.calories,
+    required this.maxSpeed,
+    this.averageCadence,
+    this.sufferScore,
+    required this.prCount,
+    this.deviceName,
+  });
+}
+
+class SplitData {
+  final int split;
+  final double distanceMeters;
+  final int movingTimeSeconds;
+  final double averageSpeed;
+  final double elevationDiff;
+  final int paceZone;
+
+  const SplitData({
+    required this.split,
+    required this.distanceMeters,
+    required this.movingTimeSeconds,
+    required this.averageSpeed,
+    required this.elevationDiff,
+    required this.paceZone,
+  });
+
+  String get pacePerKm {
+    if (averageSpeed <= 0) return '--:--';
+    final secsPerKm = 1000 / averageSpeed;
+    final mins = secsPerKm ~/ 60;
+    final secs = (secsPerKm % 60).round();
+    return '$mins:${secs.toString().padLeft(2, '0')}';
+  }
+}
+
+class SegmentEffortData {
+  final String name;
+  final double distanceMeters;
+  final int elapsedTimeSeconds;
+  final int movingTimeSeconds;
+  final int? prRank;
+  final int? komRank;
+  final double? averageGrade;
+
+  const SegmentEffortData({
+    required this.name,
+    required this.distanceMeters,
+    required this.elapsedTimeSeconds,
+    required this.movingTimeSeconds,
+    this.prRank,
+    this.komRank,
+    this.averageGrade,
+  });
+
+  String get pacePerKm {
+    if (movingTimeSeconds <= 0 || distanceMeters <= 0) return '--:--';
+    final secsPerKm = movingTimeSeconds / (distanceMeters / 1000);
+    final mins = secsPerKm ~/ 60;
+    final secs = (secsPerKm % 60).round();
+    return '$mins:${secs.toString().padLeft(2, '0')}';
+  }
+
+  double get distanceKm => distanceMeters / 1000;
 }

@@ -266,29 +266,20 @@ class _PlanViewState extends ConsumerState<_PlanView> {
                             color: accent.primary)),
                     const Spacer(),
                     GestureDetector(
-                      onTap: () => _confirmDelete(context),
+                      onTap: () => _showPlanInfo(context),
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                        width: 32,
+                        height: 32,
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(PaceRadii.pill),
-                          color: const Color.fromRGBO(255, 107, 107, 0.1),
+                          shape: BoxShape.circle,
+                          color: const Color.fromRGBO(255, 255, 255, 0.07),
                           border: Border.all(
-                              color: const Color.fromRGBO(255, 107, 107, 0.2)),
+                              color:
+                                  const Color.fromRGBO(255, 255, 255, 0.12)),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.delete_outline_rounded,
-                                size: 14, color: Color(0xFFFF6B6B)),
-                            SizedBox(width: 4),
-                            Text('Delete',
-                                style: TextStyle(
-                                    fontSize: 12,
-                                    color: Color(0xFFFF6B6B),
-                                    fontWeight: FontWeight.w600)),
-                          ],
-                        ),
+                        alignment: Alignment.center,
+                        child: Icon(Icons.info_outline_rounded,
+                            size: 16, color: accent.primary),
                       ),
                     ),
                   ],
@@ -449,6 +440,163 @@ class _PlanViewState extends ConsumerState<_PlanView> {
     return dayDate.year == now.year &&
         dayDate.month == now.month &&
         dayDate.day == now.day;
+  }
+
+  void _showPlanInfo(BuildContext context) {
+    final setup = ref.read(settingsProvider);
+    final strava = ref.read(stravaProvider);
+    final accent = widget.accent;
+    final days = widget.days;
+
+    final totalKm =
+        days.fold<double>(0, (s, d) => s + d.distanceKm);
+    final totalRuns = days.where((d) => d.sessionType != 'rest').length;
+    final completedRuns = days.where((d) => d.completed).length;
+
+    showModalBottomSheet(
+      useRootNavigator: true,
+      context: context,
+      backgroundColor: const Color(0xFF121214),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                      color: PaceColors.textMuted,
+                      borderRadius: BorderRadius.circular(2)),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text('Plan Details',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                      color: accent.primary)),
+              const SizedBox(height: 16),
+
+              // Profile info
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: PaceColors.cardBg,
+                  border: Border.all(color: PaceColors.cardBorder, width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('PROFILE',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: accent.primary)),
+                    const SizedBox(height: 10),
+                    _InfoRow(label: 'Goal', value: _goalLabel(setup.goal)),
+                    _InfoRow(label: 'Level', value: setup.level ?? '—'),
+                    _InfoRow(label: 'Days/week', value: '${setup.daysPerWeek}'),
+                    if (strava.athleteName != null)
+                      _InfoRow(label: 'Strava', value: strava.athleteName!),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+
+              // Plan stats
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: PaceColors.cardBg,
+                  border: Border.all(color: PaceColors.cardBorder, width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('OVERVIEW',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: accent.primary)),
+                    const SizedBox(height: 10),
+                    _InfoRow(
+                        label: 'Total distance',
+                        value: '${totalKm.toStringAsFixed(1)} km'),
+                    _InfoRow(label: 'Total runs', value: '$totalRuns'),
+                    _InfoRow(
+                        label: 'Completed',
+                        value: '$completedRuns / $totalRuns'),
+                    if (widget.startDate != null)
+                      _InfoRow(
+                        label: 'Start date',
+                        value:
+                            '${_PlanViewState._monthNames[widget.startDate!.month - 1]} ${widget.startDate!.day}',
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Delete plan
+              GestureDetector(
+                onTap: () {
+                  Navigator.pop(ctx);
+                  _confirmDelete(context);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: const Color(0xFFFF6B6B).withValues(alpha: 0.3)),
+                    color: const Color(0xFFFF6B6B).withValues(alpha: 0.06),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.delete_outline_rounded,
+                          size: 16, color: Color(0xFFFF6B6B)),
+                      SizedBox(width: 8),
+                      Text(
+                        'Delete Plan',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFFFF6B6B),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _goalLabel(String? goal) {
+    return switch (goal) {
+      'sub20' => 'Sub-20 5K',
+      'hm' => 'Half Marathon',
+      'fm' => 'Full Marathon',
+      'speed' => 'Speed Builder',
+      _ => goal ?? '—',
+    };
   }
 
   void _confirmDelete(BuildContext context) {
@@ -814,6 +962,11 @@ class _DayRowState extends State<_DayRow> with SingleTickerProviderStateMixin {
                       useRootNavigator: true,
                       context: context,
                       backgroundColor: const Color(0xFF121214),
+                      isScrollControlled: true,
+                      constraints: BoxConstraints(
+                        maxHeight:
+                            MediaQuery.of(context).size.height * 0.85,
+                      ),
                       shape: const RoundedRectangleBorder(
                         borderRadius:
                             BorderRadius.vertical(top: Radius.circular(20)),
@@ -953,7 +1106,7 @@ class _DayRowState extends State<_DayRow> with SingleTickerProviderStateMixin {
 }
 
 // Bottom sheet showing day details and plan vs actual comparison
-class _DayDetailSheet extends ConsumerWidget {
+class _DayDetailSheet extends ConsumerStatefulWidget {
   final PlanDay day;
   final DateTime? dayDate;
   final StravaActivity? matchedRun;
@@ -969,7 +1122,41 @@ class _DayDetailSheet extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_DayDetailSheet> createState() => _DayDetailSheetState();
+}
+
+class _DayDetailSheetState extends ConsumerState<_DayDetailSheet> {
+  DetailedStravaActivity? _detail;
+  bool _loadingDetail = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.matchedRun != null) {
+      _fetchDetail();
+    }
+  }
+
+  Future<void> _fetchDetail() async {
+    setState(() => _loadingDetail = true);
+    final strava = ref.read(stravaProvider.notifier);
+    final detail =
+        await strava.service.fetchDetailedActivity(widget.matchedRun!.id);
+    if (mounted) {
+      setState(() {
+        _detail = detail;
+        _loadingDetail = false;
+      });
+    }
+  }
+
+  PlanDay get day => widget.day;
+  DateTime? get dayDate => widget.dayDate;
+  StravaActivity? get matchedRun => widget.matchedRun;
+  AccentPreset get accent => widget.accent;
+
+  @override
+  Widget build(BuildContext context) {
     final dayNames = [
       'Monday',
       'Tuesday',
@@ -996,251 +1183,372 @@ class _DayDetailSheet extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                  color: PaceColors.textMuted,
-                  borderRadius: BorderRadius.circular(2)),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Header
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      day.label,
-                      style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      dayDate != null
-                          ? '${dayNames[dayDate!.weekday - 1]}, ${monthNames[dayDate!.month - 1]} ${dayDate!.day}'
-                          : 'Week ${day.week}',
-                      style: const TextStyle(
-                          fontSize: 14, color: PaceColors.textSecondary),
-                    ),
-                  ],
-                ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                    color: PaceColors.textMuted,
+                    borderRadius: BorderRadius.circular(2)),
               ),
-              AccentPill(
-                  label: day.sessionType.toUpperCase(), color: typeColor),
-            ],
-          ),
-          const SizedBox(height: 20),
-
-          // Plan metrics
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              color: PaceColors.cardBg,
-              border: Border.all(color: PaceColors.cardBorder, width: 0.5),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 20),
+
+            // Header
+            Row(
               children: [
-                Text('PLANNED',
-                    style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: accent.primary)),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    _MetricTile(
-                        label: 'Distance', value: '${day.distanceKm} km'),
-                    _MetricTile(label: 'Pace', value: '${day.targetPace}/km'),
-                    _MetricTile(label: 'Zone', value: '${day.effortZone}'),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        day.label,
+                        style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        dayDate != null
+                            ? '${dayNames[dayDate!.weekday - 1]}, ${monthNames[dayDate!.month - 1]} ${dayDate!.day}'
+                            : 'Week ${day.week}',
+                        style: const TextStyle(
+                            fontSize: 14, color: PaceColors.textSecondary),
+                      ),
+                    ],
+                  ),
                 ),
+                AccentPill(
+                    label: day.sessionType.toUpperCase(),
+                    color: widget.typeColor),
               ],
             ),
-          ),
+            const SizedBox(height: 20),
 
-          // Actual run comparison
-          if (matchedRun != null) ...[
-            const SizedBox(height: 10),
+            // Plan metrics
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
-                color: const Color(0xFFFC4C02).withValues(alpha: 0.06),
-                border: Border.all(
-                    color: const Color(0xFFFC4C02).withValues(alpha: 0.2),
-                    width: 0.5),
+                color: PaceColors.cardBg,
+                border: Border.all(color: PaceColors.cardBorder, width: 0.5),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Image.asset('assets/strava_logo.png', height: 10),
-                      const SizedBox(width: 6),
-                      const Text('ACTUAL',
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              color: Color(0xFFFC4C02))),
-                      const Spacer(),
-                      Text(matchedRun!.name,
-                          style: const TextStyle(
-                              fontSize: 12, color: PaceColors.textSecondary)),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      _MetricTile(
-                        label: 'Distance',
-                        value:
-                            '${matchedRun!.distanceKm.toStringAsFixed(1)} km',
-                        delta: _distanceDelta(),
-                      ),
-                      _MetricTile(
-                        label: 'Pace',
-                        value: '${matchedRun!.pacePerKm}/km',
-                        delta: _paceDelta(),
-                      ),
-                      _MetricTile(
-                        label: 'Duration',
-                        value: matchedRun!.durationFormatted,
-                      ),
-                    ],
-                  ),
-                  if (matchedRun!.hasHeartrate &&
-                      matchedRun!.averageHeartrate != null) ...[
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        _MetricTile(
-                            label: 'Avg HR',
-                            value:
-                                '${matchedRun!.averageHeartrate!.round()} bpm'),
-                        _MetricTile(
-                            label: 'Elevation',
-                            value:
-                                '${matchedRun!.totalElevationGain.toStringAsFixed(0)} m'),
-                        const Expanded(child: SizedBox()),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-
-          // Completed status
-          if (day.completed && matchedRun == null) ...[
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Container(
-                  width: 22,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: PaceColors.easy.withValues(alpha: 0.15),
-                  ),
-                  child: const Icon(Icons.check_rounded,
-                      size: 14, color: PaceColors.easy),
-                ),
-                const SizedBox(width: 8),
-                const Text('Completed',
-                    style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: PaceColors.easy)),
-              ],
-            ),
-          ],
-
-          // Notes
-          if (day.notes != null && day.notes!.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: const Color.fromRGBO(255, 255, 255, 0.04),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('NOTES',
+                  Text('PLANNED',
                       style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.8,
-                          color: PaceColors.textTertiary)),
-                  const SizedBox(height: 6),
-                  Text(
-                    day.notes!,
-                    style: const TextStyle(
-                        fontSize: 14,
-                        color: PaceColors.textSecondary,
-                        height: 1.5),
+                          color: accent.primary)),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      _MetricTile(
+                          label: 'Distance', value: '${day.distanceKm} km'),
+                      _MetricTile(
+                          label: 'Pace', value: '${day.targetPace}/km'),
+                      _MetricTile(label: 'Zone', value: '${day.effortZone}'),
+                    ],
                   ),
                 ],
+              ),
+            ),
+
+            // Actual run comparison
+            if (matchedRun != null) ...[
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  color: const Color(0xFFFC4C02).withValues(alpha: 0.06),
+                  border: Border.all(
+                      color: const Color(0xFFFC4C02).withValues(alpha: 0.2),
+                      width: 0.5),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Image.asset('assets/strava_logo.png', height: 10),
+                        const SizedBox(width: 6),
+                        const Text('ACTUAL',
+                            style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.8,
+                                color: Color(0xFFFC4C02))),
+                        const Spacer(),
+                        Text(matchedRun!.name,
+                            style: const TextStyle(
+                                fontSize: 12,
+                                color: PaceColors.textSecondary)),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        _MetricTile(
+                          label: 'Distance',
+                          value:
+                              '${matchedRun!.distanceKm.toStringAsFixed(1)} km',
+                          delta: _distanceDelta(),
+                        ),
+                        _MetricTile(
+                          label: 'Pace',
+                          value: '${matchedRun!.pacePerKm}/km',
+                          delta: _paceDelta(),
+                        ),
+                        _MetricTile(
+                          label: 'Duration',
+                          value: matchedRun!.durationFormatted,
+                        ),
+                      ],
+                    ),
+                    if (matchedRun!.hasHeartrate &&
+                        matchedRun!.averageHeartrate != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _MetricTile(
+                              label: 'Avg HR',
+                              value:
+                                  '${matchedRun!.averageHeartrate!.round()} bpm'),
+                          _MetricTile(
+                              label: 'Elevation',
+                              value:
+                                  '${matchedRun!.totalElevationGain.toStringAsFixed(0)} m'),
+                          const Expanded(child: SizedBox()),
+                        ],
+                      ),
+                    ],
+                    // Extra detail metrics
+                    if (_detail != null) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          if (_detail!.calories > 0)
+                            _MetricTile(
+                                label: 'Calories',
+                                value:
+                                    _detail!.calories.toStringAsFixed(0)),
+                          if (_detail!.averageCadence != null)
+                            _MetricTile(
+                                label: 'Cadence',
+                                value:
+                                    '${_detail!.averageCadence!.toStringAsFixed(0)} spm'),
+                          if (_detail!.prCount > 0)
+                            _MetricTile(
+                                label: 'PRs', value: '${_detail!.prCount}'),
+                          if (_detail!.calories <= 0 &&
+                              _detail!.averageCadence == null &&
+                              _detail!.prCount == 0)
+                            const Expanded(child: SizedBox()),
+                        ],
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Splits
+              if (_loadingDetail)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                      child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: Color(0xFFFC4C02)),
+                  )),
+                ),
+              if (_detail != null && _detail!.splits.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('KM SPLITS',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: PaceColors.textTertiary)),
+                const SizedBox(height: 8),
+                _SplitsChart(splits: _detail!.splits),
+              ],
+
+              // Segments
+              if (_detail != null && _detail!.segments.isNotEmpty) ...[
+                const SizedBox(height: 14),
+                const Text('SEGMENTS',
+                    style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: PaceColors.textTertiary)),
+                const SizedBox(height: 8),
+                ..._detail!.segments.map((seg) => Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: PaceColors.cardBg,
+                          border: Border.all(
+                              color: PaceColors.cardBorder, width: 0.5),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(seg.name,
+                                      style: const TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.white),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    '${seg.distanceKm.toStringAsFixed(2)} km · ${seg.pacePerKm}/km${seg.averageGrade != null ? ' · ${seg.averageGrade!.toStringAsFixed(1)}%' : ''}',
+                                    style: const TextStyle(
+                                        fontSize: 11,
+                                        color: PaceColors.textSecondary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (seg.prRank != null && seg.prRank! <= 3)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(6),
+                                  color: const Color(0xFFFFD700)
+                                      .withValues(alpha: 0.15),
+                                ),
+                                child: Text(
+                                  seg.prRank == 1
+                                      ? 'PR!'
+                                      : 'Top ${seg.prRank}',
+                                  style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFFFFD700)),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    )),
+              ],
+            ],
+
+            // Completed status
+            if (day.completed && matchedRun == null) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: PaceColors.easy.withValues(alpha: 0.15),
+                    ),
+                    child: const Icon(Icons.check_rounded,
+                        size: 14, color: PaceColors.easy),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('Completed',
+                      style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: PaceColors.easy)),
+                ],
+              ),
+            ],
+
+            // Notes
+            if (day.notes != null && day.notes!.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: const Color.fromRGBO(255, 255, 255, 0.04),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('NOTES',
+                        style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: PaceColors.textTertiary)),
+                    const SizedBox(height: 6),
+                    Text(
+                      day.notes!,
+                      style: const TextStyle(
+                          fontSize: 14,
+                          color: PaceColors.textSecondary,
+                          height: 1.5),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Ask Coach
+            const SizedBox(height: 16),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                ref.read(chatPinnedDayProvider.notifier).state = day;
+                Navigator.pop(context);
+                context.go('/chat');
+              },
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border:
+                      Border.all(color: accent.primary.withValues(alpha: 0.3)),
+                  color: accent.primary.withValues(alpha: 0.06),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.chat_bubble_outline_rounded,
+                        size: 16, color: accent.primary),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Ask Coach about this session',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: accent.primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
-
-          // Ask Coach
-          const SizedBox(height: 16),
-          GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: () {
-              ref.read(chatPinnedDayProvider.notifier).state = day;
-              Navigator.pop(context);
-              // Navigate to chat tab (index 2)
-              context.go('/chat');
-            },
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(14),
-                border:
-                    Border.all(color: accent.primary.withValues(alpha: 0.3)),
-                color: accent.primary.withValues(alpha: 0.06),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.chat_bubble_outline_rounded,
-                      size: 16, color: accent.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Ask Coach about this session',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: accent.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1254,7 +1562,6 @@ class _DayDetailSheet extends ConsumerWidget {
 
   String? _paceDelta() {
     if (matchedRun == null || matchedRun!.averageSpeed <= 0) return null;
-    // Parse planned pace "M:SS"
     final parts = day.targetPace.split(':');
     if (parts.length != 2) return null;
     final plannedSecs = int.parse(parts[0]) * 60 + int.parse(parts[1]);
@@ -1264,6 +1571,154 @@ class _DayDetailSheet extends ConsumerWidget {
     final sign = diff > 0 ? '+' : '-';
     final absDiff = diff.abs();
     return '$sign${absDiff ~/ 60}:${(absDiff % 60).toString().padLeft(2, '0')}';
+  }
+}
+
+class _SplitsChart extends StatelessWidget {
+  final List<SplitData> splits;
+
+  const _SplitsChart({required this.splits});
+
+  @override
+  Widget build(BuildContext context) {
+    if (splits.isEmpty) return const SizedBox.shrink();
+
+    // Calculate pace in sec/km for each split
+    final paces = splits
+        .map((s) => s.averageSpeed > 0 ? 1000 / s.averageSpeed : 0.0)
+        .toList();
+    final minPace = paces.where((p) => p > 0).fold<double>(double.infinity, (a, b) => a < b ? a : b);
+    final maxPace = paces.fold<double>(0, (a, b) => a > b ? a : b);
+    final range = maxPace - minPace;
+
+    return Column(
+      children: splits.asMap().entries.map((entry) {
+        final i = entry.key;
+        final s = entry.value;
+        final pace = paces[i];
+
+        // Normalize: fastest split = smallest bar (like Strava)
+        // Bar goes from ~30% (fastest) to 100% (slowest)
+        final fraction = range > 0
+            ? 0.3 + 0.7 * ((pace - minPace) / range)
+            : 0.7;
+
+        // Color: interpolate from green (fast) to orange/red (slow)
+        final t = range > 0 ? (pace - minPace) / range : 0.5;
+        final barColor = Color.lerp(
+          const Color(0xFFFC4C02), // Strava orange for fast
+          const Color(0xFFFF6B6B), // red for slow
+          t,
+        )!;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 3),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 28,
+                child: Text('${s.split}',
+                    style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: PaceColors.textMuted)),
+              ),
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Stack(
+                      children: [
+                        // Background
+                        Container(
+                          height: 28,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            color: PaceColors.cardBg,
+                          ),
+                        ),
+                        // Bar
+                        Container(
+                          height: 28,
+                          width: constraints.maxWidth * fraction,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                            gradient: LinearGradient(
+                              colors: [
+                                barColor.withValues(alpha: 0.25),
+                                barColor.withValues(alpha: 0.10),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Content overlay
+                        SizedBox(
+                          height: 28,
+                          child: Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 8),
+                            child: Row(
+                              children: [
+                                Text(s.pacePerKm,
+                                    style: const TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white)),
+                                const Text('/km',
+                                    style: TextStyle(
+                                        fontSize: 10,
+                                        color: PaceColors.textMuted)),
+                                const Spacer(),
+                                if (s.elevationDiff.abs() > 0.5)
+                                  Text(
+                                    '${s.elevationDiff > 0 ? '+' : ''}${s.elevationDiff.toStringAsFixed(0)}m',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      color: s.elevationDiff > 0
+                                          ? const Color(0xFFFF6B6B)
+                                          : PaceColors.easy,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoRow({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Text(label,
+              style: const TextStyle(
+                  fontSize: 13, color: PaceColors.textSecondary)),
+          const Spacer(),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white)),
+        ],
+      ),
+    );
   }
 }
 

@@ -26,7 +26,7 @@ class UserSetup {
     this.mobility = false,
     this.proNames = true,
     this.accentColor = 'volt',
-    this.aiModel = 'google/gemini-2.5-flash-lite',
+    this.aiModel = 'google/gemini-2.5-flash',
   });
 
   UserSetup copyWith({
