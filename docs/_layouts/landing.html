@@ -495,12 +495,14 @@ section {
 .pull-stat {
   font-family: var(--ff-display);
   font-style: italic;
-  font-size: clamp(120px, 18vw, 260px);
+  /* Sized so "0 servers." always fits the viewport without being cropped.
+     Scales linearly with width and caps generously below the section gutter. */
+  font-size: clamp(56px, 11vw, 168px);
   font-weight: 800; line-height: 0.9;
-  letter-spacing: -8px;
+  letter-spacing: -0.04em;
   color: rgba(200,255,0,0.16);
   user-select: none; pointer-events: none;
-  margin: 32px 0 -8px;
+  margin: 24px 0 -4px;
   white-space: nowrap; overflow: hidden;
   clip-path: inset(0 100% 0 0);
   transition: clip-path 1.4s cubic-bezier(0.22, 1, 0.36, 1);
@@ -815,14 +817,6 @@ footer {
       <div class="fc-icon">📅</div>
       <div class="fc-title">Plans that bend</div>
       <p class="fc-desc">Ask for a 16-week marathon block, a 5K speed plan, or a "get back into running after illness" reset. Adjust on the fly when life gets in the way — the plan moves with you.</p>
-    </div>
-
-    <!-- Calendar -->
-    <div class="feature-card reveal reveal-delay-3">
-      <div class="fc-glow"></div>
-      <div class="fc-icon">🗓️</div>
-      <div class="fc-title">In your calendar</div>
-      <p class="fc-desc">Planned sessions can sync to your iOS calendar. Updates and removals propagate when the plan changes. Events are written on-device only.</p>
     </div>
   </div>
 </section>
