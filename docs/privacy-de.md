@@ -16,8 +16,8 @@ VO2.ai ist eine quelloffene iOS-Anwendung, die als persönliches, nicht-kommerzi
 
 Bei Fragen zum Datenschutz rund um diese App kannst du dich wenden an:
 
-> **Andreas Junemann**
-> E-Mail: `andreasjunemann2@gmail.com`
+> **Andreas Junemann** <br>
+> E-Mail: `andreasjunemann2@gmail.com` <br>
 > Projekt: https://github.com/andij71/VO2.ai
 
 ## 2. Zusammenfassung in einfacher Sprache

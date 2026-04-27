@@ -16,9 +16,9 @@ VO2.ai is an open-source iOS application developed as a personal, non-commercial
 
 For any privacy-related matter regarding this app, you can contact the developer at:
 
-> **Andreas Junemann**
-> Email: `andreasjunemann2@gmail.com`
-> Project: https://github.com/andij71/VO2.ai
+> **Andreas Junemann** <br>
+> Email: `andreasjunemann2@gmail.com` <br>
+> Project: https://github.com/andij71/VO2.ai 
 
 ## 2. Summary in plain language
 
