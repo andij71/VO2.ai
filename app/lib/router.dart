@@ -22,7 +22,8 @@ import 'widgets/ambient_background.dart';
 class _RouterRefreshNotifier extends ChangeNotifier {
   _RouterRefreshNotifier(Ref ref) {
     ref.listen(authProvider, (_, __) => notifyListeners());
-    ref.listen(settingsProvider.select((s) => s.isComplete), (_, __) => notifyListeners());
+    ref.listen(settingsProvider.select((s) => s.isComplete),
+        (_, __) => notifyListeners());
     ref.listen(disclaimerProvider, (_, __) => notifyListeners());
   }
 }
@@ -46,7 +47,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       final path = state.uri.path;
 
       // Strava OAuth callback — ignore, strava_client handles via app_links
-      if (path == '/redirect' || path == '/redirect/') return '/settings';
+      final fullUri = state.uri.toString();
+      if (path == '/redirect' ||
+          path == '/redirect/' ||
+          fullUri.contains('vo2ai://') ||
+          state.uri.queryParameters.containsKey('code')) {
+        return '/settings';
+      }
 
       final isDisclaimerPath = path == '/disclaimer';
       final isAuthPath = path == '/welcome' || path == '/auth';
@@ -71,13 +78,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         return null;
       }
 
-      if (authState == AuthState.unauthenticated || authState == AuthState.invalid) {
+      if (authState == AuthState.unauthenticated ||
+          authState == AuthState.invalid) {
         return isAuthPath ? null : '/welcome';
       }
 
       return null;
     },
     routes: [
+      // Strava OAuth redirect — absorb and redirect via guard above
+      GoRoute(
+        path: '/redirect',
+        builder: (context, state) => const SizedBox.shrink(),
+      ),
       GoRoute(
         path: '/disclaimer',
         builder: (context, state) => const DisclaimerScreen(),
@@ -204,7 +217,8 @@ class _GlassTabBar extends StatelessWidget {
                       children: [
                         AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 6),
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(PaceRadii.pill),
                             color: isActive ? accent.dim : Colors.transparent,
@@ -212,7 +226,9 @@ class _GlassTabBar extends StatelessWidget {
                           child: Icon(
                             icon,
                             size: 22,
-                            color: isActive ? accent.primary : PaceColors.textMuted,
+                            color: isActive
+                                ? accent.primary
+                                : PaceColors.textMuted,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -220,8 +236,11 @@ class _GlassTabBar extends StatelessWidget {
                           label,
                           style: TextStyle(
                             fontSize: 10,
-                            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                            color: isActive ? accent.primary : PaceColors.textMuted,
+                            fontWeight:
+                                isActive ? FontWeight.w600 : FontWeight.w400,
+                            color: isActive
+                                ? accent.primary
+                                : PaceColors.textMuted,
                           ),
                         ),
                       ],

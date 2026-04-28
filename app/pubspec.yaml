@@ -1,7 +1,7 @@
 name: vo2_ai
 description: AI Running Coach
 publish_to: 'none'
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
   sdk: ^3.5.0
@@ -48,8 +48,11 @@ flutter_launcher_icons:
   min_sdk_android: 21
 
 flutter_native_splash:
-  color: "#f4eee5"
-  image: assets/app_logo_splash.png
+  # Solid near-black matches PaceColors.background in lib/core/constants.dart
+  # — so the splash → WelcomeScreen handoff is invisible (no flicker, no flash).
+  # No logo on purpose: the WelcomeScreen renders the wordmark itself, and the
+  # iOS launch screen should boot as fast as possible.
+  color: "#080809"
   ios: true
   android: false
   fullscreen: false
